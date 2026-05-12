@@ -1,6 +1,6 @@
 {
-  "name": "উত্তরাধিকার ক্যালকুলেটর - উত্তরাধিকার সমাধান",
-  "description": "মুসলিম উত্তরাধিকার আইনের আধুনিক ও নির্ভুল ক্যালকুলেটর। সহজে পারিবারিক সম্পত্তির হিসাব করুন এবং ফলাফল পিডিএফ আকারে সংগ্রহ করুন।",
-  "requestFramePermissions": [],
+  "name": "Islamic Inheritance Calculator - Sharia Distribution",
+  "description": "A comprehensive Islamic inheritance calculator supporting Sharia law across different regions, including Saudi Arabia (Hanbali) and Bangladesh. Calculate shares, assets, and export results in PDF/Image formats.",
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": []
 }

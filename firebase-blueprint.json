@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public and private information about a user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "country": { "type": "string" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "CalculationEntry": {
+      "title": "Saved Calculation",
+      "description": "A saved inheritance calculation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "deceasedName": { "type": "string" },
+        "heirs": { 
+          "type": "object",
+          "description": "Count of each heir type, e.g., { 'son': 2, 'wife': 1 }"
+        },
+        "assets": { 
+          "type": "object",
+          "description": "Asset amounts, e.g., { 'land': 10, 'money': 5000 }"
+        },
+        "country": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["heirs", "assets", "country", "timestamp"]
+    },
+    "Feedback": {
+      "title": "User Feedback",
+      "description": "User reported discrepancies or suggestions",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "type": { "type": "string", "enum": ["discrepancy", "suggestion", "other"] },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "type", "message", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "/users/{userId}/calculations/{calculationId}": {
+      "schema": "CalculationEntry",
+      "description": "Saved inheritance calculations"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "Collection of user feedback"
+    }
+  }
+}

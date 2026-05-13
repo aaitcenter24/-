@@ -56,6 +56,13 @@ export const TRANSLATIONS = {
     errorHeirCount: "ওয়ারিশ সংখ্যা শূন্যের নিচে হতে পারে না।",
     errorAssetNegative: "সম্পদের পরিমাণ ঋণাত্মক হতে পারে না।",
     rulesHeader: "উত্তরাধিকার নীতিমালা",
+    ruleTabs: {
+      sa: "সৌদি আরব",
+      bd: "বাংলাদেশ",
+      za: "দক্ষিণ আফ্রিকা",
+      pk: "পাকিস্তান",
+      schools: "মাজহাবগত পার্থক্য"
+    },
     faqHeader: "জিজ্ঞাসা ও সমাধান",
     footerTitle: "Inheritance Matrix",
     footerCopy: "© ২০২৬ • এআই লজিক",
@@ -73,6 +80,11 @@ export const TRANSLATIONS = {
     shareText: "হেরিটেজ ম্যাট্রিক্স থেকে এই উত্তরাধিকার গণনাটি দেখুন!",
     copied: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে!",
     history: "ইতিহাস",
+    savedCalculations: "সংরক্ষিত হিসাবসমূহ",
+    noSavedCalculations: "কোন সংরক্ষিত হিসাব খুঁজে পাওয়া যায়নি",
+    loginToViewHistory: "আপনার হিসাব সংরক্ষণ করতে এবং এখানে দেখতে লগইন করুন",
+    unknownDeceased: "অজ্ঞাত মৃত ব্যক্তি",
+    loadDetails: "বিস্তারিত দেখুন",
     help: "সাহায্য",
     madhhab: "মাজহাব",
     selectMadhhab: "মাজহাব নির্বাচন করুন",
@@ -85,6 +97,8 @@ export const TRANSLATIONS = {
     stepByStep: "ধাপে ধাপে নির্দেশিকা",
     inputExplanation: "ইনপুট ফিল্ডের বিবরণ",
     shariaConcepts: "ইসলামি উত্তরাধিকারের ধারণা",
+    madhhabsTitle: "মাজহাব ও আইনি পার্থক্য",
+    casesTitle: "বিশেষ ও জটিল মাসয়ালা",
     feedback: "মতামত",
     feedbackTitle: "মতামত দিন বা ভুল রিপোর্ট করুন",
     feedbackType: "ধরনের ধরণ",
@@ -117,6 +131,12 @@ export const TRANSLATIONS = {
     emailNotificationsDesc: "হিসাব সংরক্ষণ এবং গুরুত্বপূর্ণ আপডেট সম্পর্কে ইমেইল পেতে এটি সক্রিয় রাখুন।",
     saveChanges: "পরিবর্তন সংরক্ষণ করুন",
     profileUpdated: "প্রোফাইল সফলভাবে আপডেট করা হয়েছে",
+    confirmSaveTitle: "হিসাব সংরক্ষণ",
+    confirmSaveDesc: "আপনি কি এই হিসাবটি আপনার ইতিহাসে সংরক্ষণ করতে চান?",
+    confirmSaveButton: "হ্যাঁ, সংরক্ষণ করুন",
+    confirmCancelButton: "বাতিল",
+    planLimitTitle: "সংরক্ষণ সীমা অতিক্রম",
+    planLimitDesc: "ফ্রি প্ল্যানে আপনি সর্বোচ্চ ৩টি হিসাব সংরক্ষণ করতে পারেন। আনলিমিটেড সংরক্ষণের জন্য প্রো-তে আপগ্রেড করুন।",
     tour: {
       welcomeTitle: "স্বাগতম!",
       welcomeDesc: "আমাদের স্মার্ট উত্তরাধিকার ক্যালকুলেটর অ্যাপে আপনাকে স্বাগত জানাই।",
@@ -132,9 +152,84 @@ export const TRANSLATIONS = {
       langDesc: "এখান থেকে ভাষা পরিবর্তন করুন।",
       moreTitle: "অতিরিক্ত মেনু",
       moreDesc: "এটি সেটিংস, কিবলা কম্পাস এবং নামাজের সময় খুঁজে পাওয়ার জন্য এখানে ক্লিক করুন।",
-      next: "পরে",
-      prev: "আগে",
-      done: "শেষ"
+      next: "পরবর্তী",
+      prev: "পূর্ববর্তী",
+      done: "সম্পন্ন"
+    },
+    privacyPolicy: {
+      title: "গোপনীয়তা নীতি",
+      lastUpdated: "শেষ আপডেট: ১৩ মে, ২০২৬",
+      intro: "হেরিটেজ ম্যাট্রিক্স-এ আপনার গোপনীয়তা আমাদের কাছে অত্যন্ত গুরুত্বপূর্ণ। এই নীতিটি ব্যাখ্যা করে আমরা কীভাবে আপনার তথ্য সংগ্রহ এবং ব্যবহার করি।",
+      dataCollection: {
+        title: "তথ্য সংগ্রহ",
+        desc: "আমরা আপনার প্রোফাইল তথ্য (নাম, ইমেইল) এবং আপনার করা উত্তরাধিকারের হিসাবগুলো সংরক্ষণ করি যাতে আপনি পরবর্তীতে সেগুলো দেখতে পারেন।"
+      },
+      firebase: {
+        title: "নিরাপত্তা ও স্টোরেজ",
+        desc: "আমরা আপনার তথ্য সুরক্ষিতভাবে সংরক্ষণ করতে গুগল ফারায়ারবেস (Firebase) ব্যবহার করি। আপনার তথ্য এনক্রিপশন প্রোটোকলের মাধ্যমে সুরক্ষিত থাকে।"
+      },
+      usage: {
+        title: "তথ্যের ব্যবহার",
+        desc: "সংগৃহীত তথ্য শুধুমাত্র আপনাকে সঠিক সেবা প্রদানের জন্য এবং অ্যাপের অভিজ্ঞতা উন্নত করার জন্য ব্যবহার করা হয়। আমরা আপনার ব্যক্তিগত তথ্য তৃতীয় পক্ষের কাছে বিক্রি করি না।"
+      },
+      dataRetention: {
+        title: "তথ্য সংরক্ষণ ও মুছে ফেলা",
+        desc: "আপনার অ্যাকাউন্ট সক্রিয় থাকা পর্যন্ত অথবা আপনাকে সেবা প্রদানের জন্য প্রয়োজনীয় সময় পর্যন্ত আমরা তথ্য সংরক্ষণ করি। আপনি যেকোনো সময় আপনার ডেটা মুছে ফেলার অনুরোধ করতে পারেন।"
+      },
+      thirdParty: {
+        title: "তৃতীয় পক্ষের প্রকাশ",
+        desc: "আমরা কোনো অবস্থাতেই আপনার ব্যক্তিগত তথ্য বাইরের কোনো পক্ষের কাছে বিক্রি বা বিনিময় করি না।"
+      },
+      childPrivacy: {
+        title: "শিশুদের গোপনীয়তা",
+        desc: "আমাদের অ্যাপটি ১৩ বছরের কম বয়সী শিশুদের জন্য ডিজাইন করা হয়নি এবং আমরা জেনেশুনে শিশুদের থেকে কোনো তথ্য সংগ্রহ করি না।"
+      },
+      userRights: {
+        title: "আপনার অধিকার",
+        desc: "আপনার তথ্য দেখার, সংশোধন করার বা মুছে ফেলার পূর্ণ অধিকার আপনার রয়েছে।"
+      },
+      contact: {
+        title: "যোগাযোগ",
+        desc: "গোপনীয়তা বিষয়ক যেকোনো প্রশ্নে আমাদের aaitcenter24@gmail.com ঠিকানায় ইমেইল করুন।"
+      },
+      control: {
+        title: "আপনার নিয়ন্ত্রণ",
+        desc: "আপনি যেকোনো সময় আপনার মেডেল প্রোফাইল থেকে তথ্য আপডেট করতে পারেন অথবা আপনার হিসাবগুলো মুছে ফেলতে পারেন।"
+      },
+      commitment: "হেরিটেজ ম্যাট্রিক্স শূন্য-ডেটা-বিক্রয় নীতির সাথে ডিজাইন করা হয়েছে। বৈশ্বিক পর্যায়ে সঠিক ও হালাল উত্তরাধিকার সমাধান প্রদানের আমাদের মিশনে আপনার বিশ্বাসই মূল ভিত্তি।",
+      close: "বন্ধ করুন",
+      share: "পলিসি শেয়ার করুন",
+      shareBody: "হেরিটেজ ম্যাট্রিক্স-এর গোপনীয়তা নীতি এখানে দেখুন: "
+    },
+    subscriptions: {
+      title: "সাবস্ক্রিপশন প্যাকেজ",
+      choosePlan: "আপনার জন্য সঠিক প্ল্যানটি বেছে নিন",
+      free: {
+        name: "ফ্রি (Free)",
+        price: "৳০ / মাস",
+        features: [
+          "মাসে ৩টি পর্যন্ত হিসাব সংরক্ষণ",
+          "বেসিক বণ্টন রিপোর্ট",
+          "ইমেজ (PNG/JPG) ডাউনলোড",
+          "কমিউনিটি সাপোর্ট"
+        ],
+        current: "বর্তমান প্ল্যান",
+        get: "শুরু করুন"
+      },
+      pro: {
+        name: "প্রো (Pro)",
+        price: "৳৯৯ / মাস",
+        features: [
+          "আনলিমিটেড হিসাব সংরক্ষণ",
+          "পিডিএফ (PDF) রিপোর্ট ডাউনলোড",
+          "স্মার্ট AI সহকারীর সাহায্য",
+          "অ্যাড-ফ্রি অভিজ্ঞতা",
+          "প্রায়োরিটি সাপোর্ট"
+        ],
+        current: "অ্যাক্টিভেটেড",
+        get: "প্রো-তে আপগ্রেড করুন"
+      },
+      backToApp: "অ্যাপে ফিরে যান"
     }
   },
   en: {
@@ -189,6 +284,13 @@ export const TRANSLATIONS = {
     errorHeirCount: "Heir count cannot be below zero.",
     errorAssetNegative: "Asset value cannot be negative.",
     rulesHeader: "Inheritance Laws",
+    ruleTabs: {
+      sa: "Saudi Arabia",
+      bd: "Bangladesh",
+      za: "South Africa",
+      pk: "Pakistan",
+      schools: "Madhhabs"
+    },
     faqHeader: "Frequently Asked Questions",
     footerTitle: "Inheritance Matrix",
     footerCopy: "© 2026 • AI Logic",
@@ -206,6 +308,11 @@ export const TRANSLATIONS = {
     shareText: "Check out this inheritance calculation from Heritage Matrix!",
     copied: "Result copied to clipboard!",
     history: "History",
+    savedCalculations: "Saved Calculations",
+    noSavedCalculations: "No saved calculations found",
+    loginToViewHistory: "Login to save your calculations and view them here",
+    unknownDeceased: "Unknown",
+    loadDetails: "View Details",
     help: "Help",
     madhhab: "Madhhab",
     selectMadhhab: "Select Madhhab",
@@ -218,6 +325,8 @@ export const TRANSLATIONS = {
     stepByStep: "Step-by-Step Guide",
     inputExplanation: "Input Field Details",
     shariaConcepts: "Islamic Inheritance Concepts",
+    madhhabsTitle: "Madhhabs & Schools of Thought",
+    casesTitle: "Special & Complex Cases",
     feedback: "Feedback",
     feedbackTitle: "Feedback or Report Issue",
     feedbackType: "Type",
@@ -250,6 +359,12 @@ export const TRANSLATIONS = {
     emailNotificationsDesc: "Enable to receive emails about saved calculations and important updates.",
     saveChanges: "Save Changes",
     profileUpdated: "Profile updated successfully",
+    confirmSaveTitle: "Save Calculation",
+    confirmSaveDesc: "Are you sure you want to save this calculation to your history?",
+    confirmSaveButton: "Yes, Save",
+    confirmCancelButton: "Cancel",
+    planLimitTitle: "Save Limit Reached",
+    planLimitDesc: "On the free plan, you can save up to 3 calculations. Upgrade to Pro for unlimited saves.",
     tour: {
       welcomeTitle: "Welcome!",
       welcomeDesc: "Welcome to Heritage Matrix - The Precision Islamic Inheritance System.",
@@ -268,6 +383,81 @@ export const TRANSLATIONS = {
       next: "Next",
       prev: "Back",
       done: "Done"
+    },
+    privacyPolicy: {
+      title: "Privacy Policy",
+      lastUpdated: "Last Updated: May 13, 2026",
+      intro: "Your privacy is important to us at Heritage Matrix. This policy outlines how we collect, use, and protect your information.",
+      dataCollection: {
+        title: "Data Collection",
+        desc: "We store your profile information (name, email) and your inheritance calculations so you can access them later."
+      },
+      firebase: {
+        title: "Security & Storage",
+        desc: "We use Google Firebase to securely store your data. Your information is protected via industry-standard encryption protocols."
+      },
+      usage: {
+        title: "How We Use Data",
+        desc: "Collected data is used solely to provide services to you and improve the app experience. We do not sell your personal data to third parties."
+      },
+      dataRetention: {
+        title: "Retention & Deletion",
+        desc: "We retain data as long as your account is active or needed to provide services. You can request data deletion at any time."
+      },
+      thirdParty: {
+        title: "Third-Party Disclosure",
+        desc: "We never sell or trade your personally identifiable information to outside parties."
+      },
+      childPrivacy: {
+        title: "Children's Privacy",
+        desc: "Our app is not designed for children under 13, and we do not knowingly collect information from children."
+      },
+      userRights: {
+        title: "Your Rights",
+        desc: "You have the right to access, rectify, or erase your personal data stored within our system."
+      },
+      contact: {
+        title: "Contact Us",
+        desc: "For any privacy-related questions, contact us at aaitcenter24@gmail.com."
+      },
+      control: {
+        title: "Your Control",
+        desc: "You can update your profile or delete your recorded calculations at any time from your settings."
+      },
+      commitment: "Heritage Matrix is designed with a zero-data-sale policy. Your trust is core to our mission of providing accurate and halal inheritance solutions globally.",
+      close: "Close",
+      share: "Share Policy",
+      shareBody: "View the Heritage Matrix Privacy Policy here: "
+    },
+    subscriptions: {
+      title: "Subscription Packages",
+      choosePlan: "Choose the perfect plan for your needs",
+      free: {
+        name: "Free",
+        price: "$0 / month",
+        features: [
+          "Up to 3 saved calculations",
+          "Basic distribution reports",
+          "Image (PNG/JPG) downloads",
+          "Community support"
+        ],
+        current: "Current Plan",
+        get: "Get Started"
+      },
+      pro: {
+        name: "Pro",
+        price: "$4.99 / month",
+        features: [
+          "Unlimited saved calculations",
+          "PDF report downloads",
+          "Full AI Assistant access",
+          "Ad-free experience",
+          "Priority support"
+        ],
+        current: "Activated",
+        get: "Upgrade to Pro"
+      },
+      backToApp: "Back to App"
     }
   },
   ar: {
@@ -322,6 +512,13 @@ export const TRANSLATIONS = {
     errorHeirCount: "لا يمكن أن يكون عدد الورثة أقل من الصفر.",
     errorAssetNegative: "لا يمكن أن تكون قيمة الأصل سلبية.",
     rulesHeader: "قوانين الميراث",
+    ruleTabs: {
+      sa: "السعودية",
+      bd: "بنغلاديش",
+      za: "جنوب أفريقيا",
+      pk: "باكستان",
+      schools: "المذاهب"
+    },
     faqHeader: "الأسئلة الشائعة",
     footerTitle: "Heritage Matrix",
     footerCopy: "© 2026 • AI Logic",
@@ -339,6 +536,11 @@ export const TRANSLATIONS = {
     shareText: "اطلع على حساب الميراث هذا من Heritage Matrix!",
     copied: "تم نسخ النتيجة إلى الحافظة!",
     history: "السجل",
+    savedCalculations: "الحسابات المحفوظة",
+    noSavedCalculations: "لم يتم العثور على حسابات محفوظة",
+    loginToViewHistory: "قم بتسجيل الدخول لحفظ حساباتك وعرضها هنا",
+    unknownDeceased: "غير معروف",
+    loadDetails: "عرض التفاصيل",
     help: "مساعدة",
     madhhab: "المذهب",
     selectMadhhab: "اختر المذهب",
@@ -351,6 +553,8 @@ export const TRANSLATIONS = {
     stepByStep: "دليل خطوة بخطوة",
     inputExplanation: "تفاصيل حقول الإدخال",
     shariaConcepts: "مفاهيم الميراث الإسلامي",
+    madhhabsTitle: "المذاهب والاختلافات الفقهية",
+    casesTitle: "المسائل الخاصة والمعقدة",
     feedback: "التعليقات",
     feedbackTitle: "إرسال تعليق أو بلاغ خطأ",
     feedbackType: "النوع",
@@ -383,6 +587,12 @@ export const TRANSLATIONS = {
     emailNotificationsDesc: "قم بتفعيل هذا الخيار لتلقي رسائل البريد الإلكتروني حول الحسابات المحفوظة والتحديثات الهامة.",
     saveChanges: "حفظ التغييرات",
     profileUpdated: "تم تحديث الملف الشخصي بنجاح",
+    confirmSaveTitle: "حفظ الحساب",
+    confirmSaveDesc: "هل أنت متأكد أنك تريد حفظ هذا الحساب في سجلك؟",
+    confirmSaveButton: "نعم، حفظ",
+    confirmCancelButton: "إلغاء",
+    planLimitTitle: "تم الوصول إلى حد الحفظ",
+    planLimitDesc: "في الخطة المجانية، يمكنك حفظ ما يصل إلى 3 حسابات. قم بالترقية إلى برو للحصول على حفظ غير محدود.",
     tour: {
       welcomeTitle: "أهلاً بك!",
       welcomeDesc: "أهلاً بك في حاسبة الميراث الذكية - النظام الدقيق للمواريث الإسلامية.",
@@ -401,6 +611,81 @@ export const TRANSLATIONS = {
       next: "التالي",
       prev: "السابق",
       done: "تم"
+    },
+    privacyPolicy: {
+      title: "سياسة الخصوصية",
+      lastUpdated: "آخر تحديث: 13 مايو 2026",
+      intro: "خصوصيتك تهمنا في هيريتيج ماتريكس. توضح هذه السياسة كيفية جمع معلوماتك واستخدامها وحمايتها.",
+      dataCollection: {
+        title: "جمع البيانات",
+        desc: "نقوم بتخزين معلومات ملفك الشخصي (الاسم والبريد الإلكتروني) وحسابات الميراث الخاصة بك حتى تتمكن من الوصول إليها لاحقاً."
+      },
+      firebase: {
+        title: "الأمان والتخزين",
+        desc: "نحن نستخدم Google Firebase لتخزين بياناتك بشكل آمن. تتم حماية معلوماتك عبر بروتوكولات التشفير القياسية في الصناعة."
+      },
+      usage: {
+        title: "كيفية استخدام البيانات",
+        desc: "تُستخدم البيانات التي يتم جمعها فقط لتقديم الخدمات لك وتحسين تجربة التطبيق. نحن لا نبيع بياناتك الشخصية لأطراف ثالثة."
+      },
+      dataRetention: {
+        title: "الاحتفاظ بالبيانات وحذفها",
+        desc: "نحتفظ بالبيانات طوال فترة نشاط حسابك أو لتقديم الخدمات. يمكنك طلب حذف البيانات في أي وقت."
+      },
+      thirdParty: {
+        title: "الإفصاح لطرف ثالث",
+        desc: "لا نبيع أو نتاجر أبداً بمعلومات التعريف الشخصية الخاصة بك لأطراف خارجية."
+      },
+      childPrivacy: {
+        title: "خصوصية الأطفال",
+        desc: "تطبيقنا غير مصمم للأطفال دون سن 13 عاماً، ولا نجمع معلومات من الأطفال عن علم."
+      },
+      userRights: {
+        title: "حقوقك",
+        desc: "لديك الحق في الوصول إلى بياناتك الشخصية المخزنة في نظامنا أو تصحيحها أو مسحها."
+      },
+      contact: {
+        title: "اتصل بنا",
+        desc: "لأية أسئلة متعلقة بالخصوصية، اتصل بنا على aaitcenter24@gmail.com."
+      },
+      control: {
+        title: "تحكمك",
+        desc: "يمكنك تحديث ملفك الشخصي أو حذف حساباتك المسجلة في أي وقت من إعداداتك."
+      },
+      commitment: "تم تصميم Heritage Matrix بسياسة عدم بيع البيانات تماماً. ثقتكم هي جوهر مهمتنا المتمثلة في تقديم حلول ميراث دقيقة وحلال عالمياً.",
+      close: "إغلاق",
+      share: "مشاركة السياسة",
+      shareBody: "اطلع على سياسة الخصوصية لـ Heritage Matrix هنا: "
+    },
+    subscriptions: {
+      title: "باقات الاشتراك",
+      choosePlan: "اختر الخطة المثالية لاحتياجاتك",
+      free: {
+        name: "مجاني",
+        price: "0 ر.س / شهرياً",
+        features: [
+          "ما يصل إلى 3 حسابات محفوظة",
+          "تقارير التوزيع الأساسية",
+          "تحميل الصور (PNG/JPG)",
+          "دعم المجتمع"
+        ],
+        current: "الخطة الحالية",
+        get: "ابدأ الآن"
+      },
+      pro: {
+        name: "برو",
+        price: "19.99 ر.س / شهرياً",
+        features: [
+          "حسابات محفوظة غير محدودة",
+          "تحميل تقارير PDF",
+          "وصول كامل للمساعد الذكي",
+          "تجربة خالية من الإعلانات",
+          "دعم ذو أولوية"
+        ],
+        current: "مفعل",
+        get: "ترقية إلى برو"
+      },
+      backToApp: "العودة للتطبيق"
     }
   }
 };
@@ -419,9 +704,22 @@ export const HELP_CONTENT = {
       { name: "স্বর্ণ ও রৌপ্য", desc: "মৃত ব্যক্তির কাছে থাকা স্বর্ণ ও রৌপ্যের মোট ওজন (ভরি/গ্রাম) দিন।" }
     ],
     theory: [
-      { title: "আসহাবুল ফুরুজ (Fixed Sharer)", desc: "যাদের অংশ কুরআন ও সুন্নাহ দ্বারা নির্ধারিত (যেমন: স্বামী, স্ত্রী, মাতা, পিতা)।" },
-      { title: "আসাবা (Residuary)", desc: "নির্ধারিত অংশীদারদের অংশ দেওয়ার পর অবশিষ্ট সম্পদ যারা পান (যেমন: পুত্র)।" },
-      { title: "আউল ও রাদ্দ (Aul & Radd)", desc: "শেয়ারের যোগফল ১-এর বেশি হলে 'আউল' এবং কম হলে 'রাদ্দ' নিয়মে আনুপাতিক সমন্বয় করা হয়।" }
+      { title: "আসহাবুল ফুরুজ (Fixed Sharer)", desc: "যাদের অংশ কুরআন ও সুন্নাহ দ্বারা নির্ধারিত। যেমন: স্বামী, স্ত্রী, মাতা, পিতা, কন্যা ইত্যাদি। কুরআনে মোট ১২ জন নির্ধারিত অংশীদারের কথা বলা হয়েছে।" },
+      { title: "আসাবা (Residuary)", desc: "নির্ধারিত অংশীদারদের অংশ দেওয়ার পর অবশিষ্ট সম্পদ যারা পান। যেমন: পুত্র, ভাই, চাচা। পুত্র থাকলে মৃত ব্যক্তির কন্যারাও আসাবা হিসেবে ২:১ অনুপাতে ভাগ পান।" },
+      { title: "আউল (Aul - Increase)", desc: "যদি নির্ধারিত অংশীদারদের মোট অংশের যোগফল ১-এর বেশি হয়ে যায়, তবে গাণিতিক পদ্ধতির মাধ্যমে সকলের অংশ আনুপাতিক হারে কমিয়ে সমন্বয় করা হয়।" },
+      { title: "রাদ্দ (Radd - Return)", desc: "যদি আসাবা না থাকে এবং নির্ধারিত অংশীদারদের অংশ দেওয়ার পর সম্পদ অবশিষ্ট থাকে, তবে স্বামী ও স্ত্রী বাদে অন্যদের মধ্যে তা ফিরিয়ে দেওয়া হয়।" },
+      { title: "হাজব (Exclusion)", desc: "নিকটবর্তী কোনো ওয়ারিশের উপস্থিতিতে দূরবর্তী কোনো ওয়ারিশ বঞ্চিত হওয়া। যেমন: পিতা থাকলে দাদা বঞ্চিত হন, পুত্র থাকলে নাতি বঞ্চিত হন।" }
+    ],
+    madhhabs: [
+      { name: "হানাফী (Hanafi)", desc: "বাংলাদেশ, পাকিস্তান ও ভারতে সর্বাধিক প্রচলিত। এই মাজহাবে দাদা থাকলে ভাই-বোনেরা মিরাস থেকে পূর্ণ বঞ্চিত হয়।" },
+      { name: "শাফিঈ ও মালিকী (Shafi'i & Maliki)", desc: "এই মাজহাবগুলোতে দাদা ও ভাইবোনেরা একত্রে মিরাস পান (মুকাসামা)। এছাড়া 'মুশতারাকা' মাসয়ালায় সহোদর ভাইদের অংশ দেওয়া হয়।" },
+      { name: "হাম্বলী (Hanbali)", desc: "সৌদি আরবে প্রচলিত। এটি দাদা ও ভাইদের অংশীদারিত্ব সমর্থন করে কিন্তু 'মুশতারাকা' সমর্থন করে না।" }
+    ],
+    cases: [
+      { name: "আল-আকদারিয়া (Al-Akdariya)", desc: "স্বামী, মা, দাদা ও ১ জন বোনের বিশেষ মাসয়ালা। এখানে বোনকে বঞ্চিত না করে দাদার অংশের সাথে যুক্ত করে পুনরায় ৪:৯ ও ২:৯ অনুপাতে ভাগ করা হয়।" },
+      { name: "আল-মা’আদ্দা (Al-Ma’adda)", desc: "দাদা ও ভাইদের সহাবস্থানের মাসয়ালা। এখানে সহোদর ভাইয়েরা বৈমাত্রীয় ভাইদের গণনা করে দাদার অংশ কমিয়ে দেয় এবং পরে নিজেরা পুরোটা নিয়ে নেয়।" },
+      { name: "মুশতারাকা (The Shared Case)", desc: "স্বামী, মা, বৈপিত্রীয় ভাই ও সহোদর ভাই থাকলে সহোদর ভাইয়েরা বৈপিত্রীয় ভাইদের সমান ১/৩ অংশে ভাগ করে নেয়।" },
+      { name: "উম্মারিয়া (Umariyatayn)", desc: "যখন কেবল স্বামী/স্ত্রী এবং পিতা-মাতা থাকেন, তখন মাকে মোট সম্পত্তির ১/৩ না দিয়ে স্বামী/স্ত্রীর অংশ দেওয়ার পর অবশিষ্টের ১/৩ দেওয়া হয়।" }
     ]
   },
   en: {
@@ -437,9 +735,22 @@ export const HELP_CONTENT = {
       { name: "Gold & Silver", desc: "Total weight of gold and silver holdings (Vori/Gram) of the deceased." }
     ],
     theory: [
-      { title: "Fixed Sharers (Faraid)", desc: "Heirs whose shares are explicitly defined in the Quran (e.g., Husband, Wife, Parents)." },
-      { title: "Residuaries (Asabah)", desc: "Relatives who inherit the remainder of the estate after fixed sharers are satisfied (e.g., Son)." },
-      { title: "Aul & Radd", desc: "Mathematical adjustments (Proportional Increase or Return) when shares exceed or fall short of the total estate." }
+      { title: "Fixed Sharers (Faraid)", desc: "Heirs whose shares are explicitly defined in the Quran (e.g., Husband, Wife, Parents). There are 12 such primary relatives." },
+      { title: "Residuaries (Asabah)", desc: "Relatives who inherit the remainder of the estate after fixed sharers are satisfied (e.g., Son, Father, Brother). Sons make daughters residuaries in a 2:1 ratio." },
+      { title: "Aul (Increase)", desc: "A mathematical adjustment where the sum of calculated shares exceeds 1. All shares are reduced proportionally to fit the total estate." },
+      { title: "Radd (Return)", desc: "The opposite of Aul; when there's a surplus after fixed shares and no residuaries exist, the excess returns to fixed sharers (except the spouse)." },
+      { title: "Hajb (Exclusion)", desc: "The principle where closer relatives exclude more distant ones. E.g., the father excludes the grandfather; the son excludes the grandson." }
+    ],
+    madhhabs: [
+      { name: "Hanafi School", desc: "Most common in South Asia. In this school, the paternal grandfather completely excludes all brothers and sisters." },
+      { name: "Shafi'i & Maliki Schools", desc: "Common in SE Asia and Africa. They allow the grandfather to share the estate with siblings (Muqasama) and support the 'Shared Case'." },
+      { name: "Hanbali School", desc: "Official in Saudi Arabia. It supports siblings sharing with the grandfather but rejects the 'Shared Case' (Mushtaraka)." }
+    ],
+    cases: [
+      { name: "Al-Akdariya", desc: "A unique case with Husband, Mother, Grandfather, and Sister. In the majority view, the sister's share is recalibrated with the grandfather's portion." },
+      { name: "Al-Ma'adda (The Counting)", desc: "A strategy where full siblings calculate consanguine siblings to reduce the grandfather's share in Muqasama before excluding them." },
+      { name: "The Mushtaraka Case", desc: "Where full brothers are allowed to share the 1/3 portion with uterine siblings instead of getting nothing as residuaries." },
+      { name: "The Umariya (Gharrawain)", desc: "Cases involving only a spouse and parents where the mother receives 1/3 of the 'Remainder' instead of 1/3 of the 'Total'." }
     ]
   },
   ar: {
@@ -455,9 +766,22 @@ export const HELP_CONTENT = {
       { name: "الذهب والفضة", text: "إجمالي وزن حيازات الذهب والفضة (جرام) للمتوفى." }
     ],
     theory: [
-      { title: "أصحاب الفروض", text: "الورثة الذين حُددت أنصبتهم صراحة في القرآن الكريم (مثل الزوج، الزوجة، الوالدين)." },
-      { title: "العصبات", text: "الأقارب الذين يرثون ما تبقى من التركة بعد استيفاء أصحاب الفروض (مثل الابن)." },
-      { title: "العول والرد", text: "تعديلات رياضية عند زيادة السهام عن أصل المسألة (العول) أو نقصانها (الرد)." }
+      { title: "أصحاب الفروض", text: "الورثة الذين حُددت أنصبتهم صراحة في القرآن الكريم (12 وارثاً مثل الزوج، الزوجة، الوالدين)." },
+      { title: "العصبات", text: "الأقارب الذين يرثون ما تبقى من التركة بعد استيفاء أصحاب الفروض (مثل الابن، الأب، الأخ)." },
+      { title: "العول", text: "زيادة في عدد السهام عن أصل المسألة، مما يترتب عليه نقص في أنصبة الورثة بنسبة سهامهم." },
+      { title: "الرد", text: "عكس العول؛ عند وجود فائض بعد أصحاب الفروض وعدم وجود عصبة، يُرد الفائض عليهم (عدا الزوجين)." },
+      { title: "الحجب", text: "منع وارث من الإرث كلياً أو جزئياً لوجود وارث آخر هو أقرب منه. مثل حجب الأب للجد." }
+    ],
+    madhhabs: [
+      { name: "المذهب الحنفي", text: "الأكثر انتشاراً في شبه القارة الهندية. الجد فيه يحجب الإخوة تماماً كالأب." },
+      { name: "الشافعية والمالكية", text: "ينتشرون في جنوب شرق آسيا وأفريقيا. يسمحون بمشاركة الجد للإخوة (المقاسمة) ويقبلون 'التشريك'." },
+      { name: "المذهب الحنبلي", text: "المعتمد في المملكة العربية السعودية. يأخذ بالمقاسمة لكنه لا يرى التشريك في المسألة المشركة." }
+    ],
+    cases: [
+      { name: "المسألة الأكدرية", text: "مسألة فريدة (زوج، أم، جد، أخت شقيقة) تُحل عند الجمهور بطريقة تضمن للأخت نصيباً بتعديل معين (4/9 و 2/9)." },
+      { name: "المعاذة", text: "إستراتيجية يعدّ فيها الأشقاءُ الإخوةَ لأب على الجد لنقص حظه بالمقাসمة، ثم يحجب الأشقاء الإخوة لأب." },
+      { name: "المسألة المشركة", text: "حالة (زوج، أم، إخوة لأم، وأخ شقيق) حيث يشارك الأخ الشقيق الإخوة لأم في ثلثهم عند الشافعية والمالكية." },
+      { name: "المسألة العمريّة (الغراوين)", text: "المسألة التي تنحصر في أب وأم وأحد الزوجين، وتأخذ فيها الأم ثلث الباقي." }
     ]
   }
 };

@@ -35,38 +35,96 @@ async function testConnection() {
 }
 testConnection();
 
-export const syncUserProfile = async (user: any, selectedCountry?: string) => {
-  const userRef = doc(db, 'users', user.uid);
-  const userDoc = await getDoc(userRef);
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
 
-  if (!userDoc.exists()) {
-    // New user, must have country
-    if (!selectedCountry) return null;
-    const profile = {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      country: selectedCountry,
-      lastLogin: serverTimestamp(),
-      createdAt: serverTimestamp(),
-    };
-    await setDoc(userRef, profile);
-    return profile;
-  } else {
-    // Existing user
-    const existingData = userDoc.data();
-    const updateData: any = { lastLogin: serverTimestamp() };
-    if (selectedCountry) updateData.country = selectedCountry;
-    await setDoc(userRef, updateData, { merge: true });
-    return { ...existingData, ...updateData };
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+export const syncUserProfile = async (user: any, selectedCountry?: string) => {
+  const userPath = `users/${user.uid}`;
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      // New user, must have country
+      if (!selectedCountry) return null;
+      const profile = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        country: selectedCountry,
+        plan: 'free',
+        lastLogin: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      };
+      await setDoc(userRef, profile);
+      return profile;
+    } else {
+      // Existing user
+      const existingData = userDoc.data();
+      const updateData: any = { lastLogin: serverTimestamp() };
+      if (selectedCountry) updateData.country = selectedCountry;
+      await setDoc(userRef, updateData, { merge: true });
+      return { ...existingData, ...updateData };
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.WRITE, userPath);
   }
 };
 
 export const getUserProfile = async (uid: string) => {
-  const userRef = doc(db, 'users', uid);
-  const userDoc = await getDoc(userRef);
-  return userDoc.exists() ? userDoc.data() : null;
+  const path = `users/${uid}`;
+  try {
+    const userRef = doc(db, 'users', uid);
+    const userDoc = await getDoc(userRef);
+    return userDoc.exists() ? userDoc.data() : null;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, path);
+  }
 };
 
 export const updateUserProfile = async (uid: string, data: {
@@ -75,7 +133,9 @@ export const updateUserProfile = async (uid: string, data: {
   notificationLanguage?: string;
   country?: string;
   emailNotificationsEnabled?: boolean;
+  plan?: 'free' | 'pro';
 }) => {
+  const path = `users/${uid}`;
   try {
     const userRef = doc(db, 'users', uid);
     await setDoc(userRef, {
@@ -84,8 +144,7 @@ export const updateUserProfile = async (uid: string, data: {
     }, { merge: true });
     return true;
   } catch (error) {
-    console.error("Update profile failed:", error);
-    throw error;
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 };
 
@@ -111,10 +170,12 @@ export const logout = async () => {
 export const saveCalculation = async (userId: string, data: {
   deceasedName?: string;
   heirs: Record<string, number>;
+  heirNames?: Record<string, string[]>;
   assets: { land: number; money: number; gold: number; silver: number };
   country: string;
   madhhab?: string;
 }) => {
+  const path = `users/${userId}/calculations`;
   try {
     const calcRef = collection(db, 'users', userId, 'calculations');
     const docRef = await addDoc(calcRef, {
@@ -123,12 +184,12 @@ export const saveCalculation = async (userId: string, data: {
     });
     return docRef.id;
   } catch (error) {
-    console.error("Save calculation failed:", error);
-    throw error;
+    handleFirestoreError(error, OperationType.CREATE, path);
   }
 };
 
 export const getCalculations = async (userId: string) => {
+  const path = `users/${userId}/calculations`;
   try {
     const calcRef = collection(db, 'users', userId, 'calculations');
     const q = query(calcRef, orderBy('timestamp', 'desc'));
@@ -139,18 +200,17 @@ export const getCalculations = async (userId: string) => {
       timestamp: (doc.data().timestamp as Timestamp)?.toDate()
     }));
   } catch (error) {
-    console.error("Fetch calculations failed:", error);
-    throw error;
+    handleFirestoreError(error, OperationType.LIST, path);
   }
 };
 
 export const deleteCalculation = async (userId: string, calculationId: string) => {
+  const path = `users/${userId}/calculations/${calculationId}`;
   try {
     const docRef = doc(db, 'users', userId, 'calculations', calculationId);
     await deleteDoc(docRef);
   } catch (error) {
-    console.error("Delete calculation failed:", error);
-    throw error;
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 };
 
@@ -160,6 +220,7 @@ export const submitFeedback = async (data: {
   type: 'discrepancy' | 'suggestion' | 'other';
   message: string;
 }) => {
+  const path = 'feedback';
   try {
     const feedbackRef = collection(db, 'feedback');
     await addDoc(feedbackRef, {
@@ -167,7 +228,6 @@ export const submitFeedback = async (data: {
       timestamp: serverTimestamp()
     });
   } catch (error) {
-    console.error("Submit feedback failed:", error);
-    throw error;
+    handleFirestoreError(error, OperationType.CREATE, path);
   }
 };

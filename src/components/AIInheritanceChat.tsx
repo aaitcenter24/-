@@ -18,9 +18,30 @@ interface AIInheritanceChatProps {
   lang: 'bn' | 'en' | 'ar';
   isOpen: boolean;
   onClose: () => void;
+  deceasedName?: string;
+  country?: string;
+  madhhab?: string;
+  assets?: {
+    land: number;
+    money: number;
+    gold: number;
+    silver: number;
+  };
+  heirs?: Record<string, number>;
+  heirNames?: Record<string, string[]>;
 }
 
-const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({ lang, isOpen, onClose }) => {
+const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({ 
+  lang, 
+  isOpen, 
+  onClose,
+  deceasedName,
+  country,
+  madhhab,
+  assets,
+  heirs,
+  heirNames
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -62,13 +83,38 @@ const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({ lang, isOpen, onC
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const model = "gemini-3-flash-preview";
       
+      const context = {
+        deceasedInfo: {
+          name: deceasedName || null,
+          country: country || null,
+          madhhab: madhhab || null,
+        },
+        assets: assets ? {
+          land: assets.land,
+          money: assets.money,
+          gold: assets.gold,
+          silver: assets.silver,
+        } : null,
+        heirs: heirs ? Object.entries(heirs)
+          .filter(([_, count]) => count > 0)
+          .map(([id, count]) => ({
+            type: id,
+            count: count,
+            individualNames: heirNames?.[id]?.filter(Boolean) || []
+          })) : []
+      };
+
+      const contextStr = (deceasedName || country || madhhab || heirs || assets) 
+        ? `\n\nCURRENT CALCULATION STATE (JSON):\n${JSON.stringify(context, null, 2)}\n\nUse this data to provide contextually accurate advice.` 
+        : "";
+
       const systemInstruction = `You are a specialized AI assistant for Islamic Inheritance (Ilm al-Fara'id). Your name is 'Heritage Matrix Assistant'. 
 You only answer questions related to Islamic inheritance laws, distribution of assets, rights of heirs, and related jurisprudence.
 If a user asks about anything else (e.g., general cooking, politics, sports, general religion outside of inheritance), politely refuse and explain that you can only help with Islamic inheritance matters.
 Provide answers in the same language as the user's query (Bengali, English, or Arabic).
 Base your calculations and rules on standard Islamic jurisprudence (Hanafi, Hanbali, Shafi'i, Maliki) where applicable, and mention differences if the user asks.
 Keep your answers accurate and grounded in Islamic law.
-Respond concisely but thoroughly where needed.`;
+Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULATION STATE JSON to tailor your response if the user asks about their specific case.${contextStr}`;
 
       const chat = ai.chats.create({
         model: model,

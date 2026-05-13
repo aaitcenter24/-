@@ -48,12 +48,17 @@ import {
   QrCode,
   Image as ImageIcon,
   Scale,
-  RefreshCw
+  RefreshCw,
+  Crown,
+  Zap,
+  Award
 } from 'lucide-react';
 import UnitConverter from './components/UnitConverter';
 import AIInheritanceChat from './components/AIInheritanceChat';
 import SpiritualTools from './components/SpiritualTools';
 import UserSettings from './components/UserSettings';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import SubscriptionModal from './components/SubscriptionModal';
 import { HEIRS, Assets, CalculationResult, Madhhab, CalculationStep } from './types';
 import { calculateInheritance } from './lib/inheritance';
 import { 
@@ -76,14 +81,35 @@ import {
   saveCalculation,
   getCalculations,
   deleteCalculation,
-  submitFeedback
+  submitFeedback,
+  updateUserProfile
 } from './lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'];
 
 export default function App() {
-  const [lang, setLang] = useState<'bn' | 'en' | 'ar'>('ar');
+  const [lang, setLang] = useState<'bn' | 'en' | 'ar'>(() => {
+    const saved = localStorage.getItem('appLang');
+    if (saved === 'bn' || saved === 'en' || saved === 'ar') return saved;
+    
+    // Auto-detect browser language
+    const browserLang = navigator.language.toLowerCase();
+    if (browserLang.startsWith('bn')) return 'bn';
+    if (browserLang.startsWith('ar')) return 'ar';
+    return 'en'; // Default to en for detection if not bn or ar
+  });
+
+  const [showLanguageWelcome, setShowLanguageWelcome] = useState(() => {
+    return !localStorage.getItem('hasSeenLanguageWelcome');
+  });
+
+  const handleConfirmLanguage = (selectedLang: 'bn' | 'en' | 'ar') => {
+    setLang(selectedLang);
+    localStorage.setItem('appLang', selectedLang);
+    localStorage.setItem('hasSeenLanguageWelcome', 'true');
+    setShowLanguageWelcome(false);
+  };
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [deceasedName, setDeceasedName] = useState('');
   const [heirNames, setHeirNames] = useState<Record<string, string[]>>({});
@@ -94,6 +120,12 @@ export default function App() {
   const [history, setHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaveConfirmOpen, setIsSaveConfirmOpen] = useState(false);
+  const [isPlanLimitModalOpen, setIsPlanLimitModalOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('appLang', lang);
+  }, [lang]);
   
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState<'discrepancy' | 'suggestion' | 'other'>('suggestion');
@@ -122,6 +154,9 @@ export default function App() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   
   const [isConverterOpen, setIsConverterOpen] = useState(false);
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState<'free' | 'pro'>('free');
   const [converterType, setConverterType] = useState<'land' | 'precious'>('land');
   const [converterTargetField, setConverterTargetField] = useState<'land' | 'gold' | 'silver'>('land');
   
@@ -205,10 +240,16 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        const profile = await getUserProfile(currentUser.uid);
+        const profile: any = await syncUserProfile(currentUser);
         if (profile?.country) {
           setCountry(profile.country as 'BD' | 'PK' | 'SA' | 'ZA');
         }
+        if (profile?.plan) {
+          setCurrentPlan(profile.plan);
+        }
+        // Fetch history immediately to ensure subscription limits are checked correctly
+        const data = await getCalculations(currentUser.uid);
+        setHistory(data);
       }
       setUser(currentUser);
     });
@@ -385,13 +426,24 @@ export default function App() {
       return;
     }
 
-    if (Object.keys(counts).length === 0) return;
+    if (currentPlan === 'free' && history.length >= 3) {
+      setIsPlanLimitModalOpen(true);
+      return;
+    }
 
+    if (Object.keys(counts).length === 0) return;
+    
+    setIsSaveConfirmOpen(true);
+  };
+
+  const confirmSave = async () => {
+    setIsSaveConfirmOpen(false);
     try {
       setIsSaving(true);
       await saveCalculation(user.uid, {
         deceasedName,
         heirs: counts,
+        heirNames,
         assets,
         country,
         madhhab
@@ -423,12 +475,13 @@ export default function App() {
   const loadHistoryItem = (item: any) => {
     setDeceasedName(item.deceasedName || '');
     setCounts(item.heirs || {});
+    setHeirNames(item.heirNames || {});
     setAssets(item.assets || { land: 0, money: 0, gold: 0, silver: 0 });
     setCountry(item.country as any);
     if (item.madhhab) setMadhhab(item.madhhab);
     
     // Recalculate
-    const res = calculateInheritance(item.heirs, item.assets, lang, item.deceasedName, {}, item.country, item.madhhab || 'Hanafi');
+    const res = calculateInheritance(item.heirs, item.assets, lang, item.deceasedName, item.heirNames || {}, item.country, item.madhhab || 'Hanafi');
     setResult(res);
     setActiveTab('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -484,6 +537,10 @@ export default function App() {
   }, [activeTab, user]);
 
   const downloadFile = async (format: 'pdf' | 'png' | 'jpg') => {
+    if (format === 'pdf' && currentPlan === 'free') {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
     const element = document.getElementById('result-content');
     if (!element || isDownloading) return;
     
@@ -991,126 +1048,174 @@ export default function App() {
             </button>
           </div>
 
-          {/* মেনু আইকন বাটন (একদম ডানে - Fixed to Right) */}
-          <div className="relative ml-auto">
+          {/* Go Pro Button (if free) */}
+          {currentPlan === 'free' && (
             <button 
+              onClick={() => setIsSubscriptionModalOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-amber-200 hover:shadow-xl transition-all active:scale-95 animate-bounce-subtle"
+            >
+              <Crown size={14} />
+              Go Pro
+            </button>
+          )}
+
+          {/* মেনু আইকন বাটন (একদম ডানে - Fixed to Right) */}
+          <div className="relative ml-1 sm:ml-auto flex items-center gap-2">
+            <motion.button 
               id="more-menu-toggle"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-              className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full flex items-center justify-center transition-all active:scale-95 border-2 ${isMoreMenuOpen ? 'bg-emerald-800 text-white border-emerald-800 shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'}`}
+              className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full flex items-center justify-center transition-all border-2 ${isMoreMenuOpen ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-200' : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200 hover:border-slate-300'}`}
             >
               {user && user.photoURL ? (
-                <img src={user.photoURL} alt="User" className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-white/50" referrerPolicy="no-referrer" />
+                <img src={user.photoURL} alt="User" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border-2 border-white shadow-sm" referrerPolicy="no-referrer" />
               ) : (
-                <MoreVertical size={18} className="sm:w-5 sm:h-5" />
+                <motion.div
+                  animate={{ rotate: isMoreMenuOpen ? 90 : 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <MoreVertical size={20} className="sm:w-5 sm:h-5" />
+                </motion.div>
               )}
-            </button>
+            </motion.button>
 
+            <AnimatePresence>
               {isMoreMenuOpen && (
                 <>
-                  <div className="fixed inset-0 z-[105]" onClick={() => setIsMoreMenuOpen(false)} />
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-3xl shadow-2xl border border-slate-100 py-3 z-[110] overflow-hidden">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[105] bg-slate-900/10 backdrop-blur-[2px] md:bg-transparent md:backdrop-blur-none" 
+                    onClick={() => setIsMoreMenuOpen(false)} 
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 10, x: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10, x: 20 }}
+                    className="absolute right-0 top-full mt-3 w-[280px] sm:w-64 bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 p-1.5 z-[110] origin-top-right overflow-hidden"
+                  >
                     {user && (
-                      <div className="px-5 py-3 border-b border-slate-50 bg-emerald-50/30 mb-1">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                          {lang === 'bn' ? 'ব্যবহারকারী' : 'Logged in as'}
-                        </p>
-                        <p className="text-xs font-black text-emerald-900 truncate">{user.displayName || user.email}</p>
+                      <div className="px-4 py-2.5 mb-1 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100/50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full border-2 border-white shadow-sm overflow-hidden bg-white shrink-0">
+                            {user.photoURL ? (
+                              <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-600 font-black">
+                                {user.displayName?.charAt(0) || user.email?.charAt(0)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest leading-none mb-1">
+                              {lang === 'bn' ? 'প্রোফাইল' : 'Profile'}
+                            </p>
+                            <p className="text-sm font-black text-slate-800 truncate leading-tight">
+                              {user.displayName || user.email?.split('@')[0]}
+                            </p>
+                            <p className="text-[10px] text-slate-400 truncate opacity-80">{user.email}</p>
+                          </div>
+                        </div>
                       </div>
                     )}
 
-                    {/* Mobile Only items in Menu: Rule, FAQ */}
-                    <div className="md:hidden py-1">
-                      <button 
-                        onClick={() => { setActiveTab('rules'); setIsMoreMenuOpen(false); }}
-                        className={`w-full px-5 py-2.5 text-left text-xs font-bold flex items-center gap-3 transition-colors ${activeTab === 'rules' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50'}`}
-                      >
-                        <ScrollText size={16} className={activeTab === 'rules' ? 'text-emerald-500' : 'text-slate-400'} />
-                        {t.rules}
-                      </button>
-                      <button 
-                        onClick={() => { setActiveTab('history'); setIsMoreMenuOpen(false); }}
-                        className={`w-full px-5 py-2.5 text-left text-xs font-bold flex items-center gap-3 transition-colors ${activeTab === 'history' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50'}`}
-                      >
-                        <History size={16} className={activeTab === 'history' ? 'text-emerald-500' : 'text-slate-400'} />
-                        {t.history}
-                      </button>
-                      <button 
-                        onClick={() => { setActiveTab('help'); setIsMoreMenuOpen(false); }}
-                        className={`w-full px-5 py-2.5 text-left text-xs font-bold flex items-center gap-3 transition-colors ${activeTab === 'help' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50'}`}
-                      >
-                        <HelpCircle size={16} className={activeTab === 'help' ? 'text-emerald-500' : 'text-slate-400'} />
-                        {t.help}
-                      </button>
-                      <button 
-                        onClick={() => { setActiveTab('faq'); setIsMoreMenuOpen(false); }}
-                        className={`w-full px-5 py-2.5 text-left text-xs font-bold flex items-center gap-3 transition-colors ${activeTab === 'faq' ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50'}`}
-                      >
-                        <HelpCircle size={16} className={activeTab === 'faq' ? 'text-emerald-500' : 'text-slate-400'} />
-                        {t.faq}
-                      </button>
-                      <button 
-                        onClick={() => { setIsFeedbackOpen(true); setIsMoreMenuOpen(false); }}
-                        className="w-full px-5 py-2.5 text-left text-xs font-bold flex items-center gap-3 transition-colors text-slate-700 hover:bg-slate-50"
-                      >
-                        <MessageSquare size={16} className="text-slate-400" />
-                        {t.feedback}
-                      </button>
-                      <div className="h-px bg-slate-50 my-1" />
-                    </div>
+                    <div className="py-0.5 space-y-0">
+                      {/* Mobile Only: Navigation Items */}
+                      <div className="md:hidden space-y-0 mb-0.5 pb-0.5 border-b border-slate-50">
+                        {[
+                          { id: 'rules', label: t.rules, icon: ScrollText, tab: 'rules' },
+                          { id: 'history', label: t.history, icon: History, tab: 'history' },
+                          { id: 'help', label: t.help, icon: HelpCircle, tab: 'help' },
+                          { id: 'faq', label: t.faq, icon: HelpCircle, tab: 'faq' },
+                        ].map((item) => (
+                          <button 
+                            key={item.id}
+                            onClick={() => { setActiveTab(item.tab as any); setIsMoreMenuOpen(false); }}
+                            className={`w-full px-4 py-2.5 text-left text-[13px] font-bold flex items-center gap-3 rounded-xl transition-all ${activeTab === item.id ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50 hover:text-emerald-600'}`}
+                          >
+                            <item.icon size={18} className={activeTab === item.id ? 'text-emerald-500' : 'text-slate-400'} />
+                            {item.label}
+                          </button>
+                        ))}
+                        <button 
+                          onClick={() => { setIsFeedbackOpen(true); setIsMoreMenuOpen(false); }}
+                          className="w-full px-4 py-2.5 text-left text-[13px] font-bold flex items-center gap-3 rounded-xl transition-all text-slate-600 hover:bg-slate-50 hover:text-emerald-600"
+                        >
+                          <MessageSquare size={18} className="text-slate-400" />
+                          {t.feedback}
+                        </button>
+                      </div>
 
-                    <div className="py-1">
+                      {/* Main Menu Items */}
                       <button 
                         id="spiritual-tools-toggle"
                         onClick={() => { setIsSpiritualToolsOpen(true); setIsMoreMenuOpen(false); }}
-                        className="w-full px-5 py-2.5 text-left text-xs font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-3 transition-colors"
+                        className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 rounded-xl transition-all group"
                       >
-                        <Clock size={16} className="text-emerald-500" />
+                        <div className="p-1 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                          <Clock size={16} className="text-emerald-600" />
+                        </div>
                         {t.prayerTimes} & {t.qibla}
                       </button>
+
                       <button 
                         id="settings-toggle"
                         onClick={() => { setIsSettingsOpen(true); setIsMoreMenuOpen(false); }}
-                        className="w-full px-5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 rounded-xl transition-all group"
                       >
-                        <Globe size={16} className="text-slate-400" />
-                        {lang === 'bn' ? '৩. কান্ট্রি পরিবর্তীণ' : '3. Country Change'}
+                        <div className="p-1 bg-slate-50 rounded-lg group-hover:bg-slate-100 transition-colors">
+                          <Globe size={16} className="text-slate-400" />
+                        </div>
+                        {lang === 'bn' ? 'কান্ট্রি পরিবর্তন' : 'Change Country'}
                       </button>
+
                       {user && (
                         <button 
                           id="user-profile-toggle"
                           onClick={() => { setIsUserSettingsOpen(true); setIsMoreMenuOpen(false); }}
-                          className="w-full px-5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 rounded-xl transition-all group"
                         >
-                          <User size={16} className="text-blue-500" />
+                          <div className="p-1 bg-slate-50 rounded-lg group-hover:bg-slate-100 transition-colors text-blue-500">
+                            <User size={16} />
+                          </div>
                           {(t as any).userSettings}
                         </button>
                       )}
+
                       <button 
                         onClick={() => { startTour(); setIsMoreMenuOpen(false); }}
-                        className="w-full px-5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                        className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 rounded-xl transition-all group"
                       >
-                        <HelpCircle size={16} className="text-emerald-500" />
-                        {lang === 'bn' ? 'ট্যুর শুরু করুন' : lang === 'ar' ? 'ابدأ جولة تعريفية' : 'Start App Tour'}
+                        <div className="p-1 bg-slate-50 rounded-lg group-hover:bg-slate-100 transition-colors">
+                          <Zap size={16} className="text-amber-500" />
+                        </div>
+                        {lang === 'bn' ? 'ট্যুর শুরু করুন' : 'App Tour'}
                       </button>
+
                       <button 
-                        onClick={() => { setError(lang === 'bn' ? 'শীঘ্রই আসছে' : 'Coming Soon'); setIsMoreMenuOpen(false); }}
-                        className="w-full px-5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        onClick={() => { setIsPrivacyPolicyOpen(true); setIsMoreMenuOpen(false); }}
+                        className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 rounded-xl transition-all group"
                       >
-                        <Package size={16} className="text-slate-400" />
-                        {lang === 'bn' ? '৪. পেকেজ' : '4. Packages'}
+                        <div className="p-1 bg-slate-50 rounded-lg group-hover:bg-slate-100 transition-colors">
+                          <ScrollText size={16} className="text-slate-400" />
+                        </div>
+                        {t.privacyPolicy.title}
                       </button>
+
                       <button 
-                        onClick={() => { setError(lang === 'bn' ? 'শীঘ্রই আসছে' : 'Coming Soon'); setIsMoreMenuOpen(false); }}
-                        className="w-full px-5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                        onClick={() => { setIsSubscriptionModalOpen(true); setIsMoreMenuOpen(false); }}
+                        className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-3 rounded-xl transition-all group bg-emerald-50/30"
                       >
-                        <CreditCard size={16} className="text-slate-400" />
-                        {lang === 'bn' ? '৫. পেমেন্ট সেকশন' : '5. Payment Section'}
+                        <div className="p-1 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
+                          <Crown size={16} className="text-emerald-600" />
+                        </div>
+                        {TRANSLATIONS[lang].subscriptions.title}
                       </button>
                     </div>
 
-                    <div className="h-px bg-slate-50 my-1" />
-
-                    <div className="py-1">
+                    <div className="mt-1 pt-1 border-t border-slate-50">
                       {user ? (
                         <button 
                           onClick={async () => {
@@ -1121,10 +1226,12 @@ export default function App() {
                               console.error(e);
                             }
                           }}
-                          className="w-full px-5 py-3 text-left text-xs font-black text-rose-600 hover:bg-rose-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-xs font-black text-rose-600 hover:bg-rose-50 flex items-center gap-3 rounded-xl transition-all active:scale-[0.98]"
                         >
-                          <LogOut size={16} />
-                          {lang === 'bn' ? '৬. লগ আউট (Logout)' : '6. Logout'}
+                          <div className="p-1 bg-rose-50 rounded-lg text-rose-500">
+                            <LogOut size={16} />
+                          </div>
+                          {lang === 'bn' ? 'লগ আউট' : 'Logout'}
                         </button>
                       ) : (
                         <button 
@@ -1136,21 +1243,24 @@ export default function App() {
                               console.error(e);
                             }
                           }}
-                          className="w-full px-5 py-3 text-left text-xs font-black text-emerald-600 hover:bg-emerald-50 flex items-center gap-3 transition-colors"
+                          className="w-full px-4 py-2.5 text-left text-xs font-black text-emerald-600 hover:bg-emerald-50 flex items-center gap-3 rounded-xl transition-all active:scale-[0.98]"
                         >
-                          <LogIn size={16} />
-                          {lang === 'bn' ? '৬. লগইন (Login)' : '6. Login'}
+                          <div className="p-1 bg-emerald-50 rounded-lg text-emerald-500">
+                            <LogIn size={16} />
+                          </div>
+                          {lang === 'bn' ? 'লগইন' : 'Login'}
                         </button>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 </>
               )}
-            </div>
+            </AnimatePresence>
+          </div>
           </div>
       </nav>
 
-      <main className={`max-w-5xl mx-auto px-4 sm:px-8 pt-6 ${activeTab === 'input' ? 'pb-40 sm:pb-32' : 'pb-12 sm:pb-32'}`}>
+      <main className={`max-w-5xl mx-auto px-4 sm:px-8 pt-2 sm:pt-6 ${activeTab === 'input' ? 'pb-40 sm:pb-32' : 'pb-12 sm:pb-32'}`}>
         <AnimatePresence mode="wait">
           {activeTab === 'input' && (
             <motion.div 
@@ -1158,11 +1268,11 @@ export default function App() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -5 }}
-              className="space-y-4"
+              className="space-y-3 sm:space-y-4"
             >
-              <section className="space-y-4">
+              <section className="space-y-3 sm:space-y-4">
                 {/* Deceased Name Input */}
-                <div id="deceased-name-container" className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+                <div id="deceased-name-container" className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm space-y-1.5 sm:space-y-2">
                   <div className="flex items-center gap-2">
                     <ScrollText size={16} className="text-emerald-500" />
                     <label className="text-sm font-black text-slate-800 uppercase tracking-tight">{t.deceasedNameLabel}</label>
@@ -1172,16 +1282,16 @@ export default function App() {
                     value={deceasedName}
                     onChange={(e) => setDeceasedName(e.target.value)}
                     placeholder={t.deceasedNamePlaceholder}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-sm font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                    className="w-[302px] h-[40px] pl-[16px] pt-[11px] pb-[12px] pr-[14px] text-[11px] leading-[12px] bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all"
                   />
                 </div>
 
-                <div className="flex items-center gap-2 mb-2 px-1">
+                <div className="flex items-center gap-2 mb-1 sm:mb-2 px-1">
                   <div className="w-1 h-4 bg-emerald-600 rounded-full" />
                   <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">{t.selectHeirs}</h3>
                 </div>
                 
-                <div id="heirs-section" className="space-y-6 pb-2">
+                <div id="heirs-section" className="space-y-4 sm:space-y-6 pb-2">
                   {[
                     { id: 'immediate', name: t.groups.immediate, icon: Users },
                     { id: 'ancestors', name: t.groups.ancestors, icon: BookMarked },
@@ -1191,7 +1301,7 @@ export default function App() {
                     <div key={group.id} className="space-y-2">
                       <div className="flex items-center gap-1.5 px-2">
                         <group.icon className="text-emerald-500/50" size={12} />
-                        <h4 className="font-bold text-[9px] uppercase tracking-widest text-slate-400">{group.name}</h4>
+                        <h4 className="font-bold text-[10px] uppercase tracking-widest text-[#4c5869] border-[#8196b5]">{group.name}</h4>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                         {HEIRS.filter(h => {
@@ -1244,8 +1354,8 @@ export default function App() {
 
                 {/* Heir Names Input Section */}
                 {(Object.values(counts) as number[]).some(c => c > 0) && (
-                  <div className="space-y-4 mt-4 pt-4 border-t border-slate-200">
-                    <div className="flex items-center gap-2 mb-2 px-1">
+                  <div className="space-y-4 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200">
+                    <div className="flex items-center gap-2 mb-1 sm:mb-2 px-1">
                       <div className="w-1 h-4 bg-purple-600 rounded-full" />
                       <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">{t.heirNamesTitle}</h3>
                     </div>
@@ -1289,7 +1399,13 @@ export default function App() {
                         <div className="flex items-center gap-2">
                           <button 
                             id="ai-assistant-toggle"
-                            onClick={() => setIsChatOpen(true)}
+                            onClick={() => {
+                              if (currentPlan === 'free') {
+                                setIsSubscriptionModalOpen(true);
+                              } else {
+                                setIsChatOpen(true);
+                              }
+                            }}
                             className="px-3 py-2 bg-emerald-600 text-white rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 border-2 border-white sm:border-4"
                             title="AI Assistant"
                           >
@@ -1823,7 +1939,7 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <History className="text-emerald-500" size={18} />
                     <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">
-                      {lang === 'bn' ? 'সংরক্ষিত হিসাবসমূহ' : 'Saved Calculations'}
+                      {t.savedCalculations}
                     </h3>
                   </div>
                   {!user && (
@@ -1843,7 +1959,7 @@ export default function App() {
                       <Bookmark size={32} className="text-slate-300" />
                     </div>
                     <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
-                      {lang === 'bn' ? 'আপনার হিসাব সংরক্ষণ করতে এবং এখানে দেখতে লগইন করুন' : 'Login to save your calculations and view them here'}
+                      {t.loginToViewHistory}
                     </h4>
                   </div>
                 ) : isLoadingHistory ? (
@@ -1857,7 +1973,7 @@ export default function App() {
                       <History size={32} className="text-slate-300" />
                     </div>
                     <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
-                      {lang === 'bn' ? 'কোন সংরক্ষিত হিসাব খুঁজে পাওয়া যায়নি' : 'No saved calculations found'}
+                      {t.noSavedCalculations}
                     </h4>
                   </div>
                 ) : (
@@ -1879,7 +1995,7 @@ export default function App() {
                              </div>
                              <div>
                                <h4 className="text-xs font-black text-slate-800 truncate max-w-[120px]">
-                                 {item.deceasedName || (lang === 'bn' ? 'অজ্ঞাত মৃত ব্যক্তি' : 'Unknown')}
+                                 {item.deceasedName || t.unknownDeceased}
                                </h4>
                                <div className="flex items-center gap-1 text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
                                  <Calendar size={10} />
@@ -1895,28 +2011,32 @@ export default function App() {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 mt-4">
-                          <div className="bg-white/60 p-2 rounded-xl text-center border border-slate-100">
-                            <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">{t.heirHeader}</div>
-                            <div className="text-xs font-black text-slate-700">
-                              {Number(Object.values(item.heirs || {}).reduce((a: any, b: any) => a + b, 0))}
-                            </div>
+                        <div className="mt-3 flex flex-wrap gap-1">
+                          <div className="px-2 py-0.5 bg-white text-[9px] font-black text-slate-500 rounded-lg border border-slate-100 flex items-center gap-1">
+                            <Users size={10} className="text-emerald-500" />
+                            {Number(Object.values(item.heirs || {}).reduce((a: any, b: any) => a + b, 0))} {t.heirHeader}
                           </div>
-                          <div className="bg-white/60 p-2 rounded-xl text-center border border-slate-100">
-                            <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest mb-1">{t.moneyHeader}</div>
-                            <div className="text-xs font-black text-emerald-600 truncate">
-                              {item.assets?.money?.toLocaleString() || 0}
+                          {item.assets?.money > 0 && (
+                            <div className="px-2 py-0.5 bg-white text-[9px] font-black text-emerald-600 rounded-lg border border-emerald-100 flex items-center gap-1">
+                              <Gem size={10} />
+                              {item.assets.money.toLocaleString()} {t.unitMoney}
                             </div>
-                          </div>
+                          )}
+                          {item.assets?.land > 0 && (
+                            <div className="px-2 py-0.5 bg-white text-[9px] font-black text-blue-600 rounded-lg border border-blue-100 flex items-center gap-1">
+                              <ScrollText size={10} />
+                              {item.assets.land} {t.unitLand}
+                            </div>
+                          )}
                         </div>
 
-                        <div className="mt-4 flex items-center justify-between">
-                           <div className="flex items-center gap-1 px-2 py-0.5 bg-slate-200 rounded text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                        <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100">
+                           <div className="flex items-center gap-1 px-2 py-0.5 bg-slate-100/50 rounded text-[8px] font-black text-slate-400 uppercase tracking-widest">
                              <Globe size={10} />
                              {item.country}
                            </div>
                            <div className="text-[10px] font-black text-emerald-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                             {lang === 'bn' ? 'লোড করুন' : 'Load Details'}
+                             {t.loadDetails}
                              <ChevronRight size={14} />
                            </div>
                         </div>
@@ -2008,6 +2128,49 @@ export default function App() {
                         <p className="text-xs text-slate-600 leading-relaxed pl-3.5 border-l-2 border-slate-50">
                           {item.desc}
                         </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Madhhabs & Schools of Thought */}
+                <section className="mt-12">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">4</div>
+                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                       <Users size={18} className="text-emerald-500" />
+                       {t.madhhabsTitle}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.madhhabs || []).map((m: any, idx: number) => (
+                      <div key={idx} className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 italic">
+                        <h4 className="text-xs font-black text-emerald-800 mb-2 uppercase tracking-wide">{m.name}</h4>
+                        <p className="text-[10px] text-emerald-700 leading-relaxed font-medium">{m.desc || m.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Special & Complex Cases */}
+                <section className="mt-12">
+                   <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">5</div>
+                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                       <Zap size={18} className="text-emerald-500" />
+                       {t.casesTitle}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.cases || []).map((c: any, idx: number) => (
+                      <div key={idx} className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-amber-200 transition-colors">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                           <Award size={16} />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black text-slate-800 mb-1">{c.name}</h4>
+                          <p className="text-[10px] text-slate-500 leading-normal font-medium">{c.desc || c.text}</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -2237,21 +2400,208 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <AIInheritanceChat lang={lang} isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <AnimatePresence>
+        {showLanguageWelcome && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={() => handleConfirmLanguage(lang)} />
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden relative z-10 border border-slate-100"
+            >
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <Languages className="text-emerald-600" size={32} />
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
+                  {lang === 'bn' ? 'ভাষা নির্বাচন করুন' : lang === 'ar' ? 'اختر اللغة' : 'Choose Language'}
+                </h2>
+                <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                  {lang === 'bn' ? 'আপনার সুবিধামতো ভাষাটি বেছে নিন। পরে সেটিংসে পরিবর্তন করতে পারবেন।' : 
+                   lang === 'ar' ? 'حدد لغتك المفضلة. يمكنك تغيير هذا لاحقاً من الإعدادات.' : 
+                   'Select your preferred language. You can change this later in settings.'}
+                </p>
+
+                <div className="space-y-3">
+                  {[
+                    { id: 'bn', label: 'বাংলা', icon: '🇧🇩' },
+                    { id: 'en', label: 'English', icon: '🇺🇸' },
+                    { id: 'ar', label: 'العربية', icon: '🇸🇦' }
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => setLang(item.id as any)}
+                      className={`w-full p-4 rounded-2xl flex items-center justify-between transition-all border-2 ${lang === item.id ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-sm' : 'border-slate-50 bg-slate-50/50 text-slate-600 hover:bg-slate-100'}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </div>
+                      {lang === item.id && <div className="w-2 h-2 bg-emerald-500 rounded-full" />}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handleConfirmLanguage(lang)}
+                  className="w-full mt-8 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-[0.98]"
+                >
+                  {lang === 'bn' ? 'চালিয়ে যান' : lang === 'ar' ? 'استمرار' : 'Continue'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isSaveConfirmOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center"
+            >
+              <div className="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Save className="text-emerald-600" size={32} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+                {t.confirmSaveTitle}
+              </h3>
+              <p className="text-slate-500 text-sm mb-8 font-medium">
+                {t.confirmSaveDesc}
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={confirmSave}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-[0.98]"
+                >
+                  {t.confirmSaveButton}
+                </button>
+                <button
+                  onClick={() => setIsSaveConfirmOpen(false)}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-2xl font-black transition-all active:scale-[0.98]"
+                >
+                  {t.confirmCancelButton}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {isPlanLimitModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center"
+            >
+              <div className="w-16 h-16 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Zap className="text-amber-600" size={32} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+                {t.planLimitTitle}
+              </h3>
+              <p className="text-slate-500 text-sm mb-8 font-medium">
+                {t.planLimitDesc}
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setIsPlanLimitModalOpen(false);
+                    setIsSubscriptionModalOpen(true);
+                  }}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  <Crown size={18} />
+                  {lang === 'bn' ? 'প্রো-তে আপগ্রেড করুন' : lang === 'ar' ? 'ترقية إلى برو' : 'Upgrade to Pro'}
+                </button>
+                <button
+                  onClick={() => setIsPlanLimitModalOpen(false)}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-2xl font-black transition-all active:scale-[0.98]"
+                >
+                  {t.confirmCancelButton}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AIInheritanceChat 
+        lang={lang} 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        deceasedName={deceasedName}
+        country={country}
+        madhhab={madhhab}
+        assets={assets}
+        heirs={counts}
+        heirNames={heirNames}
+      />
       <SpiritualTools lang={lang} isOpen={isSpiritualToolsOpen} onClose={() => setIsSpiritualToolsOpen(false)} />
       <UserSettings 
         lang={lang} 
         isOpen={isUserSettingsOpen} 
         onClose={() => setIsUserSettingsOpen(false)} 
         onLanguageChange={(newLang) => setLang(newLang)}
+        currentPlan={currentPlan}
+        onUpgradeClick={() => setIsSubscriptionModalOpen(true)}
       />
 
       <footer className="py-4 mt-2 px-2 text-center">
-        <div className="max-w-4xl mx-auto opacity-30 flex flex-col items-center gap-1">
+        <div className="max-w-4xl mx-auto opacity-30 flex flex-col items-center gap-2">
            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-900">{t.footerTitle}</span>
            <span className="text-[7px] font-bold text-slate-400">{t.footerCopy}</span>
+           <button 
+             onClick={() => setIsPrivacyPolicyOpen(true)}
+             className="text-[7px] font-black text-emerald-600 uppercase tracking-widest hover:underline mt-1"
+           >
+             {t.privacyPolicy.title}
+           </button>
         </div>
       </footer>
+      <PrivacyPolicy 
+        lang={lang} 
+        isOpen={isPrivacyPolicyOpen} 
+        onClose={() => setIsPrivacyPolicyOpen(false)} 
+      />
+      <SubscriptionModal
+        lang={lang}
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        currentPlan={currentPlan}
+        onUpgrade={async (plan) => {
+          if (user) {
+            try {
+              await updateUserProfile(user.uid, { plan });
+              setCurrentPlan(plan);
+              setIsSubscriptionModalOpen(false);
+              setError(lang === 'bn' ? 'সফলভাবে আপগ্রেড করা হয়েছে!' : lang === 'ar' ? 'تم الترقية بنجاح!' : 'Successfully Upgraded!');
+            } catch (error) {
+              console.error("Upgrade failed:", error);
+              setError(lang === 'bn' ? 'আপগ্রেড ব্যর্থ হয়েছে' : 'Upgrade failed');
+            }
+          }
+        }}
+      />
     </div>
   );
 }

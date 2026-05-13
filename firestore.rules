@@ -7,38 +7,66 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    // Phase 3: Primitive Definition
+    function isSignedIn() { 
+      return request.auth != null && request.auth.token.email_verified == true; 
     }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    
+    function isOwner(userId) { 
+      return isSignedIn() && request.auth.uid == userId; 
     }
+    
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
 
-    function isValidUserProfile(data) {
+    // User profile validation
+    function isValidUser(data) {
       return data.keys().hasAll(['uid', 'email']) &&
              data.uid is string && data.uid.size() <= 128 &&
              data.email is string && data.email.size() <= 256;
     }
 
-    // User profiles
     match /users/{userId} {
       allow get: if isSignedIn();
-      allow list: if false; // No public listing of users
-      allow create, update: if isOwner(userId) && isValidUserProfile(request.resource.data);
-      allow delete: if false;
-
-      // Calculations
+      allow create: if isOwner(userId) && isValidUser(incoming()) && incoming().uid == userId;
+      allow update: if isOwner(userId) && (
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'lastLogin', 'country', 'displayName', 'photoURL', 
+          'maritalStatus', 'notificationLanguage', 'emailNotificationsEnabled', 
+          'updatedAt', 'plan'
+        ])
+      );
+      
+      // Calculations Subcollection
       match /calculations/{calculationId} {
-        allow read, write: if isOwner(userId);
+        function isValidCalculation(data) {
+          return data.keys().hasAll(['heirs', 'assets', 'country', 'timestamp']) &&
+                 data.heirs is map &&
+                 data.assets is map &&
+                 data.country is string && data.country.size() <= 10;
+        }
+
+        // For list queries, the rule must validate the resource path variables
+        allow list: if isOwner(userId);
+        allow get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidCalculation(incoming()) && incoming().timestamp == request.time;
+        allow delete: if isOwner(userId);
       }
     }
 
     // Feedback
     match /feedback/{feedbackId} {
-      allow create: if isSignedIn();
-      allow read, update, delete: if false; 
+      function isValidFeedback(data) {
+        return data.keys().hasAll(['uid', 'type', 'message', 'timestamp']) &&
+               data.uid is string &&
+               data.type in ['discrepancy', 'suggestion', 'other'] &&
+               data.message is string && data.message.size() <= 2000;
+      }
+      allow create: if isSignedIn() && isValidFeedback(incoming()) && incoming().uid == request.auth.uid;
     }
   }
 }

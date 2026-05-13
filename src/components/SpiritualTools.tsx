@@ -18,7 +18,9 @@ import {
   Moon,
   Sunrise,
   Sunset,
-  CloudSun
+  CloudSun,
+  Search,
+  X as CloseIcon
 } from 'lucide-react';
 
 interface PrayerTimesData {
@@ -225,20 +227,34 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
 
         <div className="px-6 pt-6 shrink-0">
           <div className="relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+              <Search size={16} />
+            </div>
             <input 
               type="text"
               value={addressInput}
               onChange={(e) => setAddressInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && fetchByAddress(addressInput)}
+              onKeyDown={(e) => e.key === 'Enter' && fetchByAddress(addressInput)}
               placeholder={t.searchPlaceholder}
-              className="w-full pl-4 pr-12 py-3 bg-slate-100 border-2 border-transparent rounded-xl text-sm font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all shadow-inner"
+              className="w-full pl-11 pr-24 py-3.5 bg-slate-100 border-2 border-transparent rounded-[1.25rem] text-sm font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all shadow-inner"
             />
-            <button 
-              onClick={() => fetchByAddress(addressInput)}
-              className="absolute right-1.5 top-1.5 h-8 px-3 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-colors"
-            >
-              {t.searchButton}
-            </button>
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {addressInput && (
+                <button 
+                  onClick={() => setAddressInput('')}
+                  className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <CloseIcon size={14} />
+                </button>
+              )}
+              <button 
+                onClick={() => fetchByAddress(addressInput)}
+                disabled={loading || !addressInput.trim()}
+                className="h-10 px-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:bg-slate-300 disabled:shadow-none transition-all"
+              >
+                {t.searchButton}
+              </button>
+            </div>
           </div>
         </div>
 

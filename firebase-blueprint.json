@@ -10,6 +10,7 @@
         "email": { "type": "string" },
         "photoURL": { "type": "string" },
         "country": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "pro"] },
         "lastLogin": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email"]
@@ -30,6 +31,7 @@
           "description": "Asset amounts, e.g., { 'land': 10, 'money': 5000 }"
         },
         "country": { "type": "string" },
+        "madhhab": { "type": "string" },
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["heirs", "assets", "country", "timestamp"]

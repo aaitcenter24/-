@@ -30,9 +30,18 @@ interface UserSettingsProps {
   isOpen: boolean;
   onClose: () => void;
   onLanguageChange: (lang: 'bn' | 'en' | 'ar') => void;
+  currentPlan: 'free' | 'pro';
+  onUpgradeClick: () => void;
 }
 
-const UserSettings: React.FC<UserSettingsProps> = ({ lang, isOpen, onClose, onLanguageChange }) => {
+const UserSettings: React.FC<UserSettingsProps> = ({ 
+  lang, 
+  isOpen, 
+  onClose, 
+  onLanguageChange,
+  currentPlan,
+  onUpgradeClick
+}) => {
   const [currentUser, setCurrentUser] = useState<FirebaseUser | null>(auth.currentUser);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -150,9 +159,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ lang, isOpen, onClose, onLa
                   <ShieldCheck size={12} className="text-white" />
                 </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-black uppercase tracking-tight">{(t as any).userSettings}</h2>
-                <p className="text-slate-400 text-xs font-bold mt-1 tracking-wider uppercase opacity-80">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-2xl font-black uppercase tracking-tight">{(t as any).userSettings}</h2>
+                  <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${
+                    currentPlan === 'pro' 
+                    ? 'bg-amber-400 text-amber-900 shadow-sm shadow-amber-400/20' 
+                    : 'bg-slate-700 text-slate-300'
+                  }`}>
+                    {currentPlan === 'pro' ? TRANSLATIONS[lang].subscriptions.pro.name : TRANSLATIONS[lang].subscriptions.free.name}
+                  </span>
+                </div>
+                <p className="text-slate-400 text-xs font-bold tracking-wider uppercase opacity-80">
                   {currentUser?.email}
                 </p>
               </div>
@@ -175,6 +193,41 @@ const UserSettings: React.FC<UserSettingsProps> = ({ lang, isOpen, onClose, onLa
             </div>
           ) : (
             <>
+              {/* Subscription Status Section */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-3xl border border-white/10 shadow-xl overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <ShieldCheck size={100} />
+                  </div>
+                  <div className="space-y-2 relative z-10">
+                    <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">
+                      {TRANSLATIONS[lang].subscriptions.title}
+                    </h3>
+                    <p className="text-xl font-black text-white uppercase tracking-tight leading-none">
+                      {currentPlan === 'pro' 
+                        ? (lang === 'bn' ? 'প্রো মেম্বার' : lang === 'ar' ? 'عضو برو' : 'Pro Member') 
+                        : (lang === 'bn' ? 'ফ্রি প্ল্যান' : lang === 'ar' ? 'الخطة المجانية' : 'Free Plan')}
+                    </p>
+                    <p className="text-[10px] font-bold text-slate-400 leading-tight">
+                      {currentPlan === 'pro' 
+                        ? (lang === 'bn' ? 'সকল প্রিমিয়াম ফিচার আনলক করা আছে' : lang === 'ar' ? 'جميع الميزات الممتازة مفعلة' : 'All premium features are unlocked')
+                        : (lang === 'bn' ? 'মাসে ৩টি সেভ লিমিট, পিডিএফ ডিজেবল' : lang === 'ar' ? 'حد 3 حسابات، تحميل PDF معطل' : '3 saves limit, PDF downloads disabled')}
+                    </p>
+                  </div>
+                  {currentPlan === 'free' && (
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onUpgradeClick();
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-amber-950 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all relative z-10"
+                    >
+                      {TRANSLATIONS[lang].subscriptions.pro.get}
+                    </button>
+                  )}
+                </div>
+              </section>
+
               {/* Profile Section */}
               <section className="space-y-6">
                 <div className="flex items-center gap-3 px-2">
@@ -242,7 +295,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ lang, isOpen, onClose, onLa
                       {(['bn', 'en', 'ar'] as const).map((l) => (
                         <button
                           key={l}
-                          onClick={() => setNotificationLanguage(l)}
+                          onClick={() => {
+                            setNotificationLanguage(l);
+                            onLanguageChange(l);
+                          }}
                           className={`px-3 py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-tight transition-all ${
                             notificationLanguage === l 
                               ? 'border-blue-500 bg-blue-50 text-blue-800' 

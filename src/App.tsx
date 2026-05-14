@@ -42,6 +42,7 @@ import {
   Trash2,
   Calendar,
   BookOpen,
+  Circle,
   Lightbulb,
   MessageSquare,
   Send,
@@ -51,7 +52,9 @@ import {
   RefreshCw,
   Crown,
   Zap,
-  Award
+  Award,
+  Sun,
+  Moon
 } from 'lucide-react';
 import UnitConverter from './components/UnitConverter';
 import AIInheritanceChat from './components/AIInheritanceChat';
@@ -110,6 +113,22 @@ export default function App() {
     localStorage.setItem('hasSeenLanguageWelcome', 'true');
     setShowLanguageWelcome(false);
   };
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    if (saved !== null) return saved === 'true';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('darkMode', String(isDarkMode));
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [deceasedName, setDeceasedName] = useState('');
   const [heirNames, setHeirNames] = useState<Record<string, string[]>>({});
@@ -405,6 +424,7 @@ export default function App() {
   const handleCalculate = () => {
     const res = calculateInheritance(counts, assets, lang, deceasedName, heirNames, country, madhhab);
     setResult(res);
+    (window as any).lastCalculationSteps = res?.steps || [];
     setActiveTab('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -483,6 +503,7 @@ export default function App() {
     // Recalculate
     const res = calculateInheritance(item.heirs, item.assets, lang, item.deceasedName, item.heirNames || {}, item.country, item.madhhab || 'Hanafi');
     setResult(res);
+    (window as any).lastCalculationSteps = res?.steps || [];
     setActiveTab('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -833,7 +854,7 @@ export default function App() {
   }, [result]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-x-hidden transition-colors duration-300">
       {/* Country Selection Modal for New Users */}
       <AnimatePresence>
         {isCountryModalOpen && (
@@ -848,15 +869,15 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden p-6 text-center"
+              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-6 text-center border dark:border-slate-800"
             >
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Globe className="text-emerald-600" size={32} />
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Globe className="text-emerald-600 dark:text-emerald-400" size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">
+              <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-2 uppercase tracking-tight">
                 {lang === 'bn' ? 'আপনার দেশ নির্বাচন করুন' : 'Select Your Country'}
               </h3>
-              <p className="text-xs text-slate-500 font-bold mb-6">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-6">
                 {lang === 'bn' ? 'আপনার দেশের আইন অনুযায়ী হিসাব করা হবে' : 'Calculator will be set according to your country'}
               </p>
               
@@ -870,10 +891,10 @@ export default function App() {
                   <button
                     key={c.id}
                     onClick={() => handleCountrySelect(c.id as any)}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all flex items-center justify-between group"
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-between group"
                   >
-                    <span className="font-black text-slate-700 uppercase tracking-tight group-hover:text-emerald-700">{c.name}</span>
-                    <div className="w-6 h-6 rounded-full border-2 border-slate-200 group-hover:border-emerald-500 flex items-center justify-center">
+                    <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{c.name}</span>
+                    <div className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-700 group-hover:border-emerald-500 flex items-center justify-center">
                       <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </button>
@@ -899,23 +920,23 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden"
+              className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border dark:border-slate-800"
             >
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
                 <div className="flex items-center gap-2">
-                  <Settings size={18} className="text-slate-600" />
-                  <h3 className="font-black text-slate-800 uppercase tracking-tight">{t.settings}</h3>
+                  <Settings size={18} className="text-slate-600 dark:text-slate-300" />
+                  <h3 className="font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{t.settings}</h3>
                 </div>
                 <button 
                   onClick={() => setIsSettingsOpen(false)}
-                  className="p-1.5 hover:bg-slate-200 rounded-full transition-colors"
+                  className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
                 >
-                  <X size={18} className="text-slate-500" />
+                  <X size={18} className="text-slate-500 dark:text-slate-400" />
                 </button>
               </div>
               <div className="p-6 space-y-6">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">
                     {t.selectCountry}
                   </label>
                   <div className="space-y-2">
@@ -933,8 +954,8 @@ export default function App() {
                         }}
                         className={`w-full px-4 py-3 rounded-xl border-2 flex items-center justify-between transition-all ${
                           country === c.id 
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-900' 
-                            : 'border-slate-200 hover:border-emerald-200 hover:bg-slate-50 text-slate-700'
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400' 
+                            : 'border-slate-200 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         <span className="font-bold text-sm">{c.name}</span>
@@ -949,7 +970,7 @@ export default function App() {
                 </div>
 
                 <div className="pt-2">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-1">
+                  <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">
                     {t.madhhab}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -959,19 +980,19 @@ export default function App() {
                         onClick={() => setMadhhab(m)}
                         className={`px-3 py-2.5 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
                           madhhab === m 
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-900' 
-                            : 'border-slate-100 hover:border-emerald-100 hover:bg-slate-50 text-slate-500'
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400' 
+                            : 'border-slate-100 dark:border-slate-800 hover:border-emerald-100 dark:hover:border-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-500 dark:text-slate-400'
                         }`}
                       >
                         <span className="font-bold text-xs">{t[m.toLowerCase().replace("'", "") as keyof typeof t] as string}</span>
-                        <span className="text-[8px] uppercase opacity-60 tracking-wider font-black">{m}</span>
+                        <span className="text-[8px] uppercase opacity-60 dark:opacity-40 tracking-wider font-black">{m}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="p-4 bg-slate-50 text-center">
-                <p className="text-[10px] text-slate-400 font-medium">Islamic Inheritance Calculator v2.1</p>
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 text-center border-t dark:border-slate-800">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Islamic Inheritance Calculator v2.1</p>
               </div>
             </motion.div>
           </div>
@@ -992,7 +1013,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <nav className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-[100] h-14 sm:h-16 shadow-sm transition-all duration-300">
+      <nav className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-[100] h-14 sm:h-16 shadow-sm transition-all duration-300">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-full flex items-center justify-between gap-1 sm:gap-4">
           
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
@@ -1039,12 +1060,21 @@ export default function App() {
             <button 
               id="lang-toggle"
               onClick={toggleLang}
-              className="h-10 px-2 sm:h-11 sm:px-3 bg-slate-100/80 text-slate-600 rounded-full flex items-center justify-center gap-1 sm:gap-2 hover:bg-slate-200 transition-all active:scale-95 border border-transparent shadow-sm"
+              className="h-10 px-2 sm:h-11 sm:px-3 bg-slate-100/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full flex items-center justify-center gap-1 sm:gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 border border-transparent shadow-sm"
             >
               <Languages size={15} className="sm:w-4 sm:h-4" />
               <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider hidden xs:inline">
                 {lang === 'bn' ? 'English' : 'বাংলা'}
               </span>
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="h-10 w-10 sm:h-11 sm:w-11 bg-slate-100/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-95 border border-transparent shadow-sm"
+              title={isDarkMode ? 'Light Mode' : 'Dark Mode'}
+            >
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
 
@@ -1272,23 +1302,23 @@ export default function App() {
             >
               <section className="space-y-3 sm:space-y-4">
                 {/* Deceased Name Input */}
-                <div id="deceased-name-container" className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm space-y-1.5 sm:space-y-2">
+                <div id="deceased-name-container" className="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm space-y-1.5 sm:space-y-2 transition-colors">
                   <div className="flex items-center gap-2">
                     <ScrollText size={16} className="text-emerald-500" />
-                    <label className="text-sm font-black text-slate-800 uppercase tracking-tight">{t.deceasedNameLabel}</label>
+                    <label className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight">{t.deceasedNameLabel}</label>
                   </div>
                   <input 
                     type="text"
                     value={deceasedName}
                     onChange={(e) => setDeceasedName(e.target.value)}
                     placeholder={t.deceasedNamePlaceholder}
-                    className="w-[302px] h-[40px] pl-[16px] pt-[11px] pb-[12px] pr-[14px] text-[11px] leading-[12px] bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all"
+                    className="w-[302px] h-[40px] pl-[16px] pt-[11px] pb-[12px] pr-[14px] text-[11px] leading-[12px] bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl font-bold text-slate-700 dark:text-slate-300 outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 transition-all"
                   />
                 </div>
 
                 <div className="flex items-center gap-2 mb-1 sm:mb-2 px-1">
                   <div className="w-1 h-4 bg-emerald-600 rounded-full" />
-                  <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">{t.selectHeirs}</h3>
+                  <h3 className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{t.selectHeirs}</h3>
                 </div>
                 
                 <div id="heirs-section" className="space-y-4 sm:space-y-6 pb-2">
@@ -1312,28 +1342,28 @@ export default function App() {
                         }).filter(h => h.group === group.id).map(heir => (
                           <div 
                             key={heir.id}
-                            className={`flex items-center justify-between p-1.5 px-3 rounded-xl border bg-white transition-all duration-200 ${
+                            className={`flex items-center justify-between p-1.5 px-3 rounded-xl border bg-white dark:bg-slate-900 transition-all duration-200 ${
                               (counts[heir.id] || 0) > 0 
                                 ? 'border-emerald-500 shadow-sm ring-1 ring-emerald-100/50' 
-                                : 'border-slate-100 hover:border-slate-200'
+                                : 'border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
                             }`}
                           >
                             <div className="flex flex-col min-w-0 pr-2">
-                              <span className="text-xs sm:text-sm font-bold text-slate-800 truncate">
+                              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
                                 {lang === 'bn' ? heir.nameBn : lang === 'ar' ? heir.nameAr : heir.nameEn}
                               </span>
                             </div>
                             
-                            <div className="flex items-center bg-slate-50 p-0.5 rounded-lg gap-1.5 shrink-0">
+                            <div className="flex items-center bg-slate-50 dark:bg-slate-800 p-0.5 rounded-lg gap-1.5 shrink-0 transition-colors">
                               <button 
                                 onClick={() => updateCount(heir.id, -1)}
-                                className="w-6 h-6 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:border-rose-200 transition-all active:scale-90 shadow-sm"
+                                className="w-6 h-6 rounded-md bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:border-rose-200 transition-all active:scale-90 shadow-sm"
                               >
                                 <span className="font-bold text-xs">-</span>
                               </button>
                               
                               <div className="w-4 text-center">
-                                <span className="text-xs font-black text-emerald-600">
+                                <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
                                   {counts[heir.id] || 0}
                                 </span>
                               </div>
@@ -1393,9 +1423,9 @@ export default function App() {
               {/* STICKY ASSET BAR - FIXED TO BOTTOM - COMPACT BUT LEGIBLE FOOTER */}
               <div id="assets-bar" className="fixed bottom-0 left-0 right-0 z-[60] pointer-events-none">
                 <div className="max-w-5xl mx-auto px-4 sm:px-8">
-                  <div className="bg-white border-t border-x border-emerald-600 shadow-[0_-15px_40px_rgba(16,185,129,0.12)] rounded-t-2xl px-4 py-2 sm:px-6 sm:py-3 pointer-events-auto">
+                  <div className="bg-white dark:bg-slate-900 border-t border-x border-emerald-600 dark:border-emerald-500 shadow-[0_-15px_40px_rgba(16,185,129,0.12)] rounded-t-2xl px-4 py-2 sm:px-6 sm:py-3 pointer-events-auto transition-colors">
                     <section className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between border-b border-emerald-50 pb-1 flex-wrap gap-2">
+                      <div className="flex items-center justify-between border-b border-emerald-50 dark:border-emerald-900/30 pb-1 flex-wrap gap-2 transition-colors">
                         <div className="flex items-center gap-2">
                           <button 
                             id="ai-assistant-toggle"
@@ -1406,7 +1436,7 @@ export default function App() {
                                 setIsChatOpen(true);
                               }
                             }}
-                            className="px-3 py-2 bg-emerald-600 text-white rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 border-2 border-white sm:border-4"
+                            className="px-3 py-2 bg-emerald-600 text-white rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all active:scale-95 border-2 border-white sm:border-4 dark:border-slate-800"
                             title="AI Assistant"
                           >
                             <MessageSquare size={16} />
@@ -1415,15 +1445,15 @@ export default function App() {
                             </span>
                           </button>
                           <div className="flex items-center gap-1.5">
-                            <div className="p-1 bg-emerald-50 rounded-md">
-                              <Coins className="text-emerald-600" size={14} />
+                            <div className="p-1 bg-emerald-50 dark:bg-emerald-900/30 rounded-md">
+                              <Coins className="text-emerald-600 dark:text-emerald-400" size={14} />
                             </div>
-                            <h3 className="text-[17px] font-black text-slate-800 uppercase tracking-tight text-center">
+                            <h3 className="text-[17px] font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight text-center">
                               {lang === 'bn' ? 'সম্পত্তির বিবরণী' : 'Asset Details'}
                             </h3>
                           </div>
                         </div>
-                        <span className="hidden sm:block text-[9px] font-black text-slate-200 uppercase tracking-[0.2em]">{lang === 'bn' ? 'স্মার্ট উত্তরাধিকার গণনা' : 'SMART INHERITANCE'}</span>
+                        <span className="hidden sm:block text-[9px] font-black text-slate-200 dark:text-slate-700 uppercase tracking-[0.2em] transition-colors">{lang === 'bn' ? 'স্মার্ট উত্তরাধিকার গণনা' : 'SMART INHERITANCE'}</span>
                       </div>
                       
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
@@ -1469,7 +1499,7 @@ export default function App() {
                                   className="hover:scale-125 transition-transform ml-0.5"
                                   title="Converter"
                                 >
-                                  <Scale size={8} className="text-emerald-100" />
+                                  <Scale size={12} className="text-emerald-50 group-hover:text-white transition-colors" />
                                 </button>
                               )}
                             </label>
@@ -1479,7 +1509,7 @@ export default function App() {
                                 min="0"
                                 value={assets[asset.key as keyof Assets] || ''}
                                 onChange={(e) => handleAssetChange(asset.key as keyof Assets, e.target.value)}
-                                className="w-full pl-2.5 pr-8 py-2 sm:py-2.5 bg-slate-50 border border-slate-100 rounded-lg text-xs sm:text-base font-black text-emerald-800 outline-none focus:bg-white focus:border-emerald-500 transition-all shadow-inner"
+                                className="w-full pl-2.5 pr-8 py-2 sm:py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-xs sm:text-base font-black text-emerald-800 dark:text-emerald-400 outline-none focus:bg-white dark:focus:bg-slate-700 focus:border-emerald-500 transition-all shadow-inner"
                                 placeholder="0.00"
                               />
                               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[8px] sm:text-xs font-bold text-slate-400 uppercase">
@@ -1493,7 +1523,7 @@ export default function App() {
                       <div className="flex gap-2 items-center pt-0.5">
                          <button 
                            onClick={handleReset}
-                           className="w-10 sm:w-12 h-9 sm:h-10 bg-slate-100 text-slate-500 hover:text-rose-500 hover:bg-rose-50 transition-all flex items-center justify-center border border-slate-200 rounded-lg active:scale-95 shrink-0 shadow-sm"
+                           className="w-10 sm:w-12 h-9 sm:h-10 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all flex items-center justify-center border border-slate-200 dark:border-slate-700 rounded-lg active:scale-95 shrink-0 shadow-sm"
                            title={t.reset}
                          >
                            <RotateCcw size={16} />
@@ -1525,7 +1555,7 @@ export default function App() {
               <div className="flex items-center justify-between gap-2">
                 <button 
                   onClick={() => setActiveTab('input')}
-                  className="px-3 py-1.5 rounded-full bg-slate-200 text-slate-700 text-[9px] font-bold flex items-center gap-1 hover:bg-slate-300 transition-colors"
+                  className="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9px] font-bold flex items-center gap-1 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
                 >
                   <ChevronRight size={14} className="rotate-180" />
                   {t.back}
@@ -1533,14 +1563,14 @@ export default function App() {
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   <button 
                     onClick={() => setSortBy(prev => prev === 'default' ? 'name' : 'default')}
-                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 transition-colors ${sortBy === 'name' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 transition-colors ${sortBy === 'name' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700'}`}
                   >
                     <TableIcon size={12} />
                     {t.sortByName}
                   </button>
                   <button 
                     onClick={() => setShowQrModal(true)}
-                    className="px-3 py-1.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1.5 hover:bg-slate-300 transition-colors"
+                    className="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold flex items-center gap-1.5 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
                   >
                     <QrCode size={12} />
                     QR
@@ -1548,7 +1578,7 @@ export default function App() {
                   <button 
                     onClick={shareResult}
                     disabled={isSharing}
-                    className="px-3 py-1.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center gap-1.5 hover:bg-slate-300 transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold flex items-center gap-1.5 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
                   >
                     <Share2 size={12} />
                     {t.share}
@@ -1557,7 +1587,7 @@ export default function App() {
                   <button 
                     onClick={handleSaveCalculation}
                     disabled={isSaving}
-                    className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold flex items-center gap-1.5 hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer border border-emerald-100 disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold flex items-center gap-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-sm cursor-pointer border border-emerald-100 dark:border-emerald-800 disabled:opacity-50"
                   >
                     {isSaving ? (
                       <div className="w-3 h-3 border-2 border-emerald-600/20 border-t-emerald-600 rounded-full animate-spin" />
@@ -1587,12 +1617,12 @@ export default function App() {
                           className="fixed inset-0 z-[40]" 
                           onClick={() => setIsDownloadMenuOpen(false)} 
                         />
-                        <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[50] overflow-hidden">
-                          <div className="px-4 py-2 border-b border-slate-50">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">PDF CUSTOMIZATION</p>
-                             <label className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors">
+                        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 py-2 z-[50] overflow-hidden transition-colors">
+                          <div className="px-4 py-2 border-b border-slate-50 dark:border-slate-700">
+                             <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">PDF CUSTOMIZATION</p>
+                             <label className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                                <ImageIcon size={12} className="text-emerald-500" />
-                               <span className="text-[10px] font-bold text-slate-600">{customLogo ? (lang === 'bn' ? 'লোগো পরিবর্তন' : 'Change Logo') : (lang === 'bn' ? 'নিজস্ব লোগো' : 'Add Logo')}</span>
+                               <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{customLogo ? (lang === 'bn' ? 'লোগো পরিবর্তন' : 'Change Logo') : (lang === 'bn' ? 'নিজস্ব লোগো' : 'Add Logo')}</span>
                                <input 
                                  type="file" 
                                  accept="image/*" 
@@ -1612,24 +1642,24 @@ export default function App() {
                                  type="checkbox" 
                                  checked={showRulesInPdf} 
                                  onChange={(e) => setShowRulesInPdf(e.target.checked)}
-                                 className="w-3 h-3 rounded text-emerald-600 focus:ring-emerald-500"
+                                 className="w-3 h-3 rounded text-emerald-600 focus:ring-emerald-500 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600"
                                />
-                               <span className="text-[10px] font-bold text-slate-600">{lang === 'bn' ? 'আইনী ব্যাখ্যা যুক্ত করুন' : 'Include Rules Summary'}</span>
+                               <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">{lang === 'bn' ? 'আইনী ব্যাখ্যা যুক্ত করুন' : 'Include Rules Summary'}</span>
                              </label>
                           </div>
-                          <button onClick={() => downloadFile('pdf')} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2 border-b border-slate-50">
+                          <button onClick={() => downloadFile('pdf')} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 transition-colors">
                             <BookMarked size={12} className="text-emerald-500" />
                             {t.downloadPDF}
                           </button>
-                          <button onClick={() => downloadFile('png')} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2 border-b border-slate-50">
+                          <button onClick={() => downloadFile('png')} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 transition-colors">
                             <Gem size={12} className="text-emerald-500" />
                             {t.downloadPNG}
                           </button>
-                          <button onClick={() => downloadFile('jpg')} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2 border-b border-slate-50">
+                          <button onClick={() => downloadFile('jpg')} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center gap-2 border-b border-slate-50 dark:border-slate-700 transition-colors">
                             <Gem size={12} className="text-emerald-500" />
                             {t.downloadJPG}
                           </button>
-                          <button onClick={printReport} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2">
+                          <button onClick={printReport} className="w-full px-4 py-2.5 text-left text-[11px] font-bold text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 flex items-center gap-2 transition-colors">
                             <Printer size={12} className="text-emerald-500" />
                             {t.printReport}
                           </button>
@@ -1640,24 +1670,24 @@ export default function App() {
                 </div>
               </div>
 
-              <div id="result-content" className="space-y-4 bg-white p-3 sm:p-8 rounded-2xl shadow-xl border border-slate-100">
+              <div id="result-content" className="space-y-4 bg-white dark:bg-slate-900 p-3 sm:p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 transition-colors">
                 <header className="border-b-2 border-emerald-500 pb-4 mb-2 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-center sm:text-left">
-                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{t.reportTitle}</h3>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{t.reportTitle}</h3>
                     {result.deceasedName && (
-                      <div className="mt-2 flex items-center justify-center sm:justify-start gap-2 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 w-fit mx-auto sm:mx-0">
+                      <div className="mt-2 flex items-center justify-center sm:justify-start gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50 w-fit mx-auto sm:mx-0">
                          <Users size={14} />
                          <span className="text-xs font-black uppercase tracking-wider">{lang === 'bn' ? 'মৃত ব্যক্তি:' : 'Deceased:'} {result.deceasedName}</span>
                       </div>
                     )}
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-2">
                       {lang === 'bn' ? 'ইসলামী বিধি মোতাবেক সঠিক বণ্টন' : 'Accurate distribution by Islamic Law'}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <div className="bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100 text-center">
-                      <div className="text-[8px] text-emerald-600 font-black uppercase tracking-tighter">{t.heirsCount}</div>
-                      <div className="text-lg font-black text-emerald-800 leading-none">{result.rows.length}</div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-800/50 text-center">
+                      <div className="text-[8px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-tighter">{t.heirsCount}</div>
+                      <div className="text-lg font-black text-emerald-800 dark:text-emerald-200 leading-none">{result.rows.length}</div>
                     </div>
                   </div>
                 </header>
@@ -1669,9 +1699,9 @@ export default function App() {
                       <TableIcon size={16} />
                       <h4 className="font-bold text-xs uppercase tracking-widest">{t.detailsTitle}</h4>
                     </div>
-                    <div className="overflow-x-auto w-full rounded-b-xl border border-slate-100 shadow-sm no-scrollbar">
+                    <div className="overflow-x-auto w-full rounded-b-xl border border-slate-100 dark:border-slate-800 shadow-sm no-scrollbar transition-colors">
                       <table className="w-full text-left border-collapse min-w-[500px]">
-                        <thead className="bg-slate-50 text-slate-500 text-[9px] uppercase tracking-wider font-black border-b border-slate-100">
+                        <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] uppercase tracking-wider font-black border-b border-slate-100 dark:border-slate-700">
                           <tr>
                             <th className="px-4 py-3">{t.heirHeader}</th>
                             <th className="px-2 py-3 text-center">{t.relationshipHeader}</th>
@@ -1686,50 +1716,50 @@ export default function App() {
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50 text-[10px] sm:text-xs">
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800 text-[10px] sm:text-xs">
                           {sortedRows.map((row, idx) => {
                             const isHighlighted = highlightedHeirIds.includes(row.heirId);
                             return (
                               <tr 
                                 key={idx} 
-                                className={`hover:bg-emerald-50/30 transition-all duration-300 ${row.decimal === 0 ? 'bg-slate-50/80 grayscale' : ''} ${isHighlighted ? 'bg-emerald-100/50 ring-2 ring-emerald-500 rounded-lg transform scale-[1.01] shadow-md z-10 relative' : ''}`}
+                                className={`hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition-all duration-300 ${row.decimal === 0 ? 'bg-slate-50/80 dark:bg-slate-900 grayscale' : ''} ${isHighlighted ? 'bg-emerald-100/50 dark:bg-emerald-900/30 ring-2 ring-emerald-500 rounded-lg transform scale-[1.01] shadow-md z-10 relative' : ''}`}
                               >
                                 <td className="px-4 py-3">
                                   <div className="flex flex-col">
-                                    <span className={`font-bold text-slate-800 transition-transform ${isHighlighted ? 'text-emerald-700 scale-110 origin-left' : ''}`}>
+                                    <span className={`font-bold text-slate-800 dark:text-slate-200 transition-transform ${isHighlighted ? 'text-emerald-700 dark:text-emerald-400 scale-110 origin-left' : ''}`}>
                                       {row.individualName || row.name}
                                     </span>
                                     {row.decimal === 0 && row.note && (
-                                      <span className="text-[9px] text-rose-500 font-bold mt-1 bg-rose-50 px-2 py-0.5 rounded-md w-fit">
+                                      <span className="text-[9px] text-rose-500 font-bold mt-1 bg-rose-50 dark:bg-rose-900/30 px-2 py-0.5 rounded-md w-fit">
                                         <Info size={10} className="inline mr-1" />
                                         {row.note}
                                       </span>
                                     )}
                                   </div>
                                 </td>
-                                <td className="px-2 py-3 text-center font-bold text-slate-500 grayscale">
+                                <td className="px-2 py-3 text-center font-bold text-slate-500 dark:text-slate-500 grayscale">
                                   {typeof t.relOfDeceased === 'function' ? t.relOfDeceased(row.name) : row.name}
                                 </td>
-                                <td className="px-2 py-3 font-mono text-emerald-600 text-center font-bold">
+                                <td className="px-2 py-3 font-mono text-emerald-600 dark:text-emerald-400 text-center font-bold">
                                   {row.decimal === 0 ? '০/০' : row.decimal.toFixed(4)}
                                 </td>
-                                <td className="px-2 py-3 text-right font-mono text-slate-500 font-medium">{row.land.toFixed(2)}</td>
-                                <td className="px-2 py-3 text-right font-mono text-slate-500 font-medium">{row.gold.toFixed(2)}</td>
-                                <td className="px-2 py-3 text-right font-mono text-slate-500 font-medium">{row.silver.toFixed(2)}</td>
-                                <td className="px-3 py-3 text-right font-mono font-black text-slate-900 bg-slate-50/50">{row.money.toLocaleString()}</td>
+                                <td className="px-2 py-3 text-right font-mono text-slate-500 dark:text-slate-400 font-medium">{row.land.toFixed(2)}</td>
+                                <td className="px-2 py-3 text-right font-mono text-slate-500 dark:text-slate-400 font-medium">{row.gold.toFixed(2)}</td>
+                                <td className="px-2 py-3 text-right font-mono text-slate-500 dark:text-slate-400 font-medium">{row.silver.toFixed(2)}</td>
+                                <td className="px-3 py-3 text-right font-mono font-black text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-800/30 transition-colors">{row.money.toLocaleString()}</td>
                               </tr>
                             );
                           })}
                         </tbody>
-                        <tfoot className="bg-emerald-50/30 font-black border-t-2 border-emerald-100">
+                        <tfoot className="bg-emerald-50/30 dark:bg-emerald-900/20 font-black border-t-2 border-emerald-100 dark:border-emerald-900/50 transition-colors">
                           <tr>
-                            <td className="px-4 py-3 text-emerald-800 uppercase text-[9px]">{t.total}</td>
+                            <td className="px-4 py-3 text-emerald-800 dark:text-emerald-200 uppercase text-[9px]">{t.total}</td>
                             <td className="px-2 py-3"></td>
-                            <td className="px-2 py-3 text-emerald-600 text-center">{result.totalFraction.toFixed(0)}/1</td>
-                            <td className="px-2 py-3 text-right text-slate-400">{assets.land.toFixed(2)}</td>
-                            <td className="px-2 py-3 text-right text-slate-400">{assets.gold.toFixed(2)}</td>
-                            <td className="px-2 py-3 text-right text-slate-400">{assets.silver.toFixed(2)}</td>
-                            <td className="px-3 py-3 text-right text-emerald-800">{assets.money.toLocaleString()}</td>
+                            <td className="px-2 py-3 text-emerald-600 dark:text-emerald-400 text-center">{result.totalFraction.toFixed(0)}/1</td>
+                            <td className="px-2 py-3 text-right text-slate-400 dark:text-slate-500">{assets.land.toFixed(2)}</td>
+                            <td className="px-2 py-3 text-right text-slate-400 dark:text-slate-500">{assets.gold.toFixed(2)}</td>
+                            <td className="px-2 py-3 text-right text-slate-400 dark:text-slate-500">{assets.silver.toFixed(2)}</td>
+                            <td className="px-3 py-3 text-right text-emerald-800 dark:text-emerald-200">{assets.money.toLocaleString()}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -1778,13 +1808,13 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="lg:col-span-7 space-y-4">
-                      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm">
+                    <div className="lg:col-span-12 space-y-4">
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm transition-colors">
                         <div className="bg-[#8E44AD] text-white px-4 py-3 flex items-center gap-2">
                            <ScrollText size={16} />
                            <h5 className="font-black text-xs uppercase tracking-[0.1em]">{t.stepsTitle}</h5>
                         </div>
-                        <div className="p-4 sm:p-6 bg-slate-50/30">
+                        <div className="p-4 sm:p-6 bg-slate-50/30 dark:bg-slate-800/10 transition-colors">
                           <ul className="space-y-4">
                             {result.steps.map((step, idx) => (
                               <li 
@@ -1803,10 +1833,10 @@ export default function App() {
                                   }
                                 }}
                               >
-                                <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 text-[10px] font-black flex items-center justify-center transition-all ${highlightedHeirIds.length > 0 && step.heirIds?.some(id => highlightedHeirIds.includes(id)) ? 'bg-[#8E44AD] text-white border-[#8E44AD]' : 'bg-white border-[#8E44AD] text-[#8E44AD] group-hover:bg-[#8E44AD]/10'}`}>
+                                <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 text-[10px] font-black flex items-center justify-center transition-all ${highlightedHeirIds.length > 0 && step.heirIds?.some(id => highlightedHeirIds.includes(id)) ? 'bg-[#8E44AD] text-white border-[#8E44AD]' : 'bg-white dark:bg-slate-800 border-[#8E44AD] text-[#8E44AD] group-hover:bg-[#8E44AD]/10'}`}>
                                   {idx + 1}
                                 </div>
-                                <p className={`text-[11px] sm:text-xs leading-relaxed font-semibold pt-0.5 transition-all ${highlightedHeirIds.length > 0 && step.heirIds?.some(id => highlightedHeirIds.includes(id)) ? 'text-[#8E44AD] scale-[1.02]' : 'text-slate-600'}`}>
+                                <p className={`text-[11px] sm:text-xs leading-relaxed font-semibold pt-0.5 transition-all ${highlightedHeirIds.length > 0 && step.heirIds?.some(id => highlightedHeirIds.includes(id)) ? 'text-[#8E44AD] scale-[1.02]' : 'text-slate-600 dark:text-slate-400'}`}>
                                   {step.text}
                                 </p>
                               </li>
@@ -1854,29 +1884,29 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="space-y-3 px-1"
             >
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+              <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
+                <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <ScrollText className="text-amber-500" size={18} />
-                  <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">{t.rulesHeader}</h3>
+                  <h3 className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{t.rulesHeader}</h3>
                 </div>
                 
                 <div className="space-y-6">
                   {INHERITANCE_RULES[lang].map((rule, idx) => (
                     <div key={idx} className="space-y-3">
-                       <h4 className="flex items-center gap-2 text-xs sm:text-sm font-black text-emerald-700 uppercase tracking-wide">
+                       <h4 className="flex items-center gap-2 text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
                          <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
                          {rule.title}
                        </h4>
-                       <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed font-semibold bg-slate-50 p-3 rounded-xl border border-slate-200">
+                       <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors">
                          {rule.content}
                        </p>
                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                          {rule.points.map((point, pIdx) => (
-                           <li key={pIdx} className="group flex gap-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-sm transition-all">
-                              <span className="flex-shrink-0 w-6 h-6 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full flex items-center justify-center">
+                           <li key={pIdx} className="group flex gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-sm transition-all">
+                              <span className="flex-shrink-0 w-6 h-6 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-black rounded-full flex items-center justify-center">
                                 {pIdx + 1}
                               </span>
-                              <span className="text-[11px] sm:text-xs text-slate-700 leading-snug font-bold">
+                              <span className="text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 leading-snug font-bold">
                                 {point}
                               </span>
                            </li>
@@ -1896,25 +1926,25 @@ export default function App() {
               animate={{ opacity: 1 }}
               className="space-y-3 px-1"
             >
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+              <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
+                <div className="flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <HelpCircle className="text-blue-500" size={18} />
-                  <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">{t.faqHeader}</h3>
+                  <h3 className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{t.faqHeader}</h3>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {FAQ_DATA[lang].map((item, idx) => (
-                    <div key={idx} className="group p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/5 transition-all h-full flex flex-col">
+                    <div key={idx} className="group p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/40 hover:border-blue-300 dark:hover:border-blue-800 hover:bg-blue-50/5 dark:hover:bg-blue-900/10 transition-all h-full flex flex-col">
                       <div className="flex gap-3 items-start mb-3">
-                        <span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-600 text-[12px] font-black rounded-full flex items-center justify-center shadow-sm">Q</span>
-                        <h4 className="font-extrabold text-slate-800 text-[11px] sm:text-xs leading-snug mt-1">
+                        <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[12px] font-black rounded-full flex items-center justify-center shadow-sm">Q</span>
+                        <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] sm:text-xs leading-snug mt-1">
                           {item.q}
                         </h4>
                       </div>
-                      <div className="ml-10 p-3 bg-slate-50 rounded-xl border border-slate-200/50 mt-auto">
+                      <div className="ml-10 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/50 dark:border-slate-700/50 mt-auto transition-colors">
                         <div className="flex gap-3 items-start">
-                          <span className="text-slate-400 font-black text-[9px] mt-1 uppercase tracking-tighter shrink-0">{lang === 'bn' ? 'উত্তর:' : 'Ans:'}</span>
-                          <p className="text-slate-700 text-[11px] sm:text-xs leading-relaxed font-mono italic font-bold">
+                          <span className="text-slate-400 dark:text-slate-500 font-black text-[9px] mt-1 uppercase tracking-tighter shrink-0">{lang === 'bn' ? 'উত্তর:' : 'Ans:'}</span>
+                          <p className="text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs leading-relaxed font-mono italic font-bold">
                             {item.a}
                           </p>
                         </div>
@@ -1934,11 +1964,11 @@ export default function App() {
               exit={{ opacity: 0 }}
               className="space-y-3 px-1"
             >
-              <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 min-h-[400px]">
-                <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 min-h-[400px] transition-colors">
+                <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <div className="flex items-center gap-2">
                     <History className="text-emerald-500" size={18} />
-                    <h3 className="text-sm sm:text-base font-black text-slate-800 uppercase tracking-tight">
+                    <h3 className="text-sm sm:text-base font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
                       {t.savedCalculations}
                     </h3>
                   </div>
@@ -1955,24 +1985,24 @@ export default function App() {
 
                 {!user ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center opacity-60">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                      <Bookmark size={32} className="text-slate-300" />
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 transition-colors">
+                      <Bookmark size={32} className="text-slate-300 dark:text-slate-600" />
                     </div>
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                    <h4 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       {t.loginToViewHistory}
                     </h4>
                   </div>
                 ) : isLoadingHistory ? (
                   <div className="flex flex-col items-center justify-center py-20">
                     <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{lang === 'bn' ? 'লোড হচ্ছে...' : 'Loading...'}</p>
+                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{lang === 'bn' ? 'লোড হচ্ছে...' : 'Loading...'}</p>
                   </div>
                 ) : history.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-center opacity-40">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                      <History size={32} className="text-slate-300" />
+                    <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 transition-colors">
+                      <History size={32} className="text-slate-300 dark:text-slate-600" />
                     </div>
-                    <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">
+                    <h4 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                       {t.noSavedCalculations}
                     </h4>
                   </div>
@@ -1984,20 +2014,20 @@ export default function App() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         onClick={() => loadHistoryItem(item)}
-                        className="group bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-white hover:shadow-xl transition-all cursor-pointer relative overflow-hidden"
+                        className="group bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl transition-all cursor-pointer relative overflow-hidden"
                       >
                         <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500 transform -translate-x-full group-hover:translate-x-0 transition-transform" />
                         
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                             <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                                <Users size={16} />
                              </div>
                              <div>
-                               <h4 className="text-xs font-black text-slate-800 truncate max-w-[120px]">
+                               <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 truncate max-w-[120px]">
                                  {item.deceasedName || t.unknownDeceased}
                                </h4>
-                               <div className="flex items-center gap-1 text-[9px] text-slate-400 font-bold uppercase tracking-tighter">
+                               <div className="flex items-center gap-1 text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-tighter">
                                  <Calendar size={10} />
                                  {item.timestamp?.toLocaleDateString(lang === 'bn' ? 'bn-BD' : 'en-GB')}
                                </div>
@@ -2005,37 +2035,60 @@ export default function App() {
                           </div>
                           <button 
                             onClick={(e) => handleDeleteHistory(item.id, e)}
-                            className="p-2 rounded-full hover:bg-rose-50 text-slate-300 hover:text-rose-500 transition-colors"
+                            className="p-2 rounded-full hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
                         </div>
 
-                        <div className="mt-3 flex flex-wrap gap-1">
-                          <div className="px-2 py-0.5 bg-white text-[9px] font-black text-slate-500 rounded-lg border border-slate-100 flex items-center gap-1">
-                            <Users size={10} className="text-emerald-500" />
-                            {Number(Object.values(item.heirs || {}).reduce((a: any, b: any) => a + b, 0))} {t.heirHeader}
+                        <div className="mt-3 space-y-2">
+                          <div className="flex flex-wrap gap-1.5">
+                            <div className="px-2 py-1 bg-white dark:bg-slate-900 text-[9px] font-black text-slate-500 dark:text-slate-400 rounded-lg border border-slate-100 dark:border-slate-800 flex items-center gap-1.5 transition-colors shadow-sm">
+                              <Users size={10} className="text-emerald-500" />
+                              {Number(Object.values(item.heirs || {}).reduce((a: any, b: any) => a + b, 0))} {t.heirHeader}
+                            </div>
+                            {item.madhhab && (
+                              <div className="px-2 py-1 bg-white dark:bg-slate-900 text-[9px] font-black text-amber-600 dark:text-amber-400 rounded-lg border border-amber-100 dark:border-amber-900/30 flex items-center gap-1.5 transition-colors shadow-sm">
+                                <BookOpen size={10} />
+                                {item.madhhab}
+                              </div>
+                            )}
                           </div>
-                          {item.assets?.money > 0 && (
-                            <div className="px-2 py-0.5 bg-white text-[9px] font-black text-emerald-600 rounded-lg border border-emerald-100 flex items-center gap-1">
-                              <Gem size={10} />
-                              {item.assets.money.toLocaleString()} {t.unitMoney}
-                            </div>
-                          )}
-                          {item.assets?.land > 0 && (
-                            <div className="px-2 py-0.5 bg-white text-[9px] font-black text-blue-600 rounded-lg border border-blue-100 flex items-center gap-1">
-                              <ScrollText size={10} />
-                              {item.assets.land} {t.unitLand}
-                            </div>
-                          )}
+
+                          <div className="flex flex-wrap gap-1.5">
+                            {item.assets?.money > 0 && (
+                              <div className="px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-[9px] font-black text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-100 dark:border-emerald-800/50 flex items-center gap-1.5 transition-colors">
+                                <Gem size={10} />
+                                {item.assets.money.toLocaleString()} {t.unitMoney}
+                              </div>
+                            )}
+                            {item.assets?.land > 0 && (
+                              <div className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-[9px] font-black text-blue-600 dark:text-blue-400 rounded-lg border border-blue-100 dark:border-blue-800/50 flex items-center gap-1.5 transition-colors">
+                                <ScrollText size={10} />
+                                {item.assets.land} {t.unitLand}
+                              </div>
+                            )}
+                            {item.assets?.gold > 0 && (
+                              <div className="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-[9px] font-black text-amber-600 dark:text-amber-400 rounded-lg border border-amber-100 dark:border-amber-800/50 flex items-center gap-1.5 transition-colors">
+                                <Coins size={10} />
+                                {item.assets.gold} {t.unitGold}
+                              </div>
+                            )}
+                            {item.assets?.silver > 0 && (
+                              <div className="px-2 py-1 bg-slate-100 dark:bg-slate-800/50 text-[9px] font-black text-slate-600 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 transition-colors">
+                                <Circle size={10} />
+                                {item.assets.silver} {t.unitSilver}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100">
-                           <div className="flex items-center gap-1 px-2 py-0.5 bg-slate-100/50 rounded text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                        <div className="mt-4 flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
+                           <div className="flex items-center gap-1 px-2 py-0.5 bg-slate-100/50 dark:bg-slate-900/50 rounded text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest transition-colors">
                              <Globe size={10} />
                              {item.country}
                            </div>
-                           <div className="text-[10px] font-black text-emerald-600 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                           <div className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                              {t.loadDetails}
                              <ChevronRight size={14} />
                            </div>
@@ -2055,13 +2108,13 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.98 }}
               className="space-y-6"
             >
-              <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200">
+              <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
                 <div className="flex flex-col items-center text-center mb-10">
-                  <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 shadow-inner">
+                  <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4 shadow-inner transition-colors">
                     <HelpCircle size={32} />
                   </div>
-                  <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{t.help}</h2>
-                  <p className="text-slate-500 text-sm font-medium mt-2 max-w-md">
+                  <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">{t.help}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-2 max-w-md">
                     {lang === 'bn' ? 'কীভাবে ক্যালকুলেটর ব্যবহার করবেন এবং ইসলামি উত্তরাধিকার আইন বুঝবেন তার একটি গাইড।' : 'A comprehensive guide on how to use the calculator and understand Islamic inheritance laws.'}
                   </p>
                 </div>
@@ -2070,16 +2123,16 @@ export default function App() {
                 <section className="mb-12">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">1</div>
-                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter flex items-center gap-2">
                        <BookOpen size={18} className="text-emerald-500" />
                        {t.stepByStep}
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.steps || []).map((step: any, idx: number) => (
-                      <div key={idx} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-emerald-200 transition-colors">
-                        <h4 className="text-sm font-black text-emerald-600 mb-2 uppercase tracking-wide">{step.title}</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed font-medium">{step.text}</p>
+                      <div key={idx} className="p-5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
+                        <h4 className="text-sm font-black text-emerald-600 dark:text-emerald-400 mb-2 uppercase tracking-wide">{step.title}</h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{step.text}</p>
                       </div>
                     ))}
                   </div>
@@ -2089,20 +2142,20 @@ export default function App() {
                 <section className="mb-12">
                    <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">2</div>
-                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter flex items-center gap-2">
                        <Info size={18} className="text-emerald-500" />
                        {t.inputExplanation}
                     </h3>
                   </div>
                   <div className="space-y-3">
                     {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.fields || []).map((field: any, idx: number) => (
-                      <div key={idx} className="flex gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400">
+                      <div key={idx} className="flex gap-4 p-4 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 transition-colors">
                            <Lightbulb size={18} />
                         </div>
                         <div>
-                          <h4 className="text-sm font-black text-slate-800 mb-1">{field.name}</h4>
-                          <p className="text-xs text-slate-500 leading-normal">{field.desc || (field as any).text}</p>
+                          <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 mb-1">{field.name}</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">{field.desc || (field as any).text}</p>
                         </div>
                       </div>
                     ))}
@@ -2113,19 +2166,19 @@ export default function App() {
                 <section>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">3</div>
-                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter flex items-center gap-2">
                        <Globe size={18} className="text-emerald-500" />
                        {t.shariaConcepts}
                     </h3>
                   </div>
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
                     {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.theory || []).map((item: any, idx: number) => (
                       <div key={idx} className="py-5 first:pt-0 last:pb-0">
-                        <h4 className="text-sm font-black text-slate-800 mb-2 flex items-center gap-2">
+                        <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           {item.title}
                         </h4>
-                        <p className="text-xs text-slate-600 leading-relaxed pl-3.5 border-l-2 border-slate-50">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed pl-3.5 border-l-2 border-slate-50 dark:border-slate-800">
                           {item.desc}
                         </p>
                       </div>
@@ -2137,16 +2190,16 @@ export default function App() {
                 <section className="mt-12">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">4</div>
-                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter flex items-center gap-2">
                        <Users size={18} className="text-emerald-500" />
                        {t.madhhabsTitle}
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.madhhabs || []).map((m: any, idx: number) => (
-                      <div key={idx} className="p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100 italic">
-                        <h4 className="text-xs font-black text-emerald-800 mb-2 uppercase tracking-wide">{m.name}</h4>
-                        <p className="text-[10px] text-emerald-700 leading-relaxed font-medium">{m.desc || m.text}</p>
+                      <div key={idx} className="p-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 italic transition-colors">
+                        <h4 className="text-xs font-black text-emerald-800 dark:text-emerald-400 mb-2 uppercase tracking-wide">{m.name}</h4>
+                        <p className="text-[10px] text-emerald-700 dark:text-emerald-300 leading-relaxed font-medium">{m.desc || m.text}</p>
                       </div>
                     ))}
                   </div>
@@ -2156,20 +2209,20 @@ export default function App() {
                 <section className="mt-12">
                    <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">5</div>
-                    <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter flex items-center gap-2">
                        <Zap size={18} className="text-emerald-500" />
                        {t.casesTitle}
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {(HELP_CONTENT[lang as keyof typeof HELP_CONTENT]?.cases || []).map((c: any, idx: number) => (
-                      <div key={idx} className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-amber-200 transition-colors">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                      <div key={idx} className="flex gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-800 transition-colors">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 transition-colors">
                            <Award size={16} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black text-slate-800 mb-1">{c.name}</h4>
-                          <p className="text-[10px] text-slate-500 leading-normal font-medium">{c.desc || c.text}</p>
+                          <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 mb-1">{c.name}</h4>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal font-medium">{c.desc || c.text}</p>
                         </div>
                       </div>
                     ))}
@@ -2206,16 +2259,16 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden p-8 text-center"
+                className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden p-8 text-center transition-colors border border-slate-100 dark:border-slate-800"
               >
                 <div className="flex items-center justify-between mb-6">
-                   <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">SCAN QR CODE</h3>
-                   <button onClick={() => setShowQrModal(false)} className="p-2 hover:bg-slate-100 rounded-full">
-                     <X size={20} className="text-slate-400" />
+                   <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">SCAN QR CODE</h3>
+                   <button onClick={() => setShowQrModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                     <X size={20} className="text-slate-400 dark:text-slate-500" />
                    </button>
                 </div>
                 
-                <div className="bg-white p-6 rounded-2xl border-4 border-emerald-50 mb-6 flex justify-center shadow-inner">
+                <div className="bg-white p-6 rounded-2xl border-4 border-emerald-50 dark:border-emerald-900/30 mb-6 flex justify-center shadow-inner transition-colors">
                   <QRCodeSVG 
                     value={shareUrl} 
                     size={200} 
@@ -2235,7 +2288,7 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col gap-2 mb-6">
-                  <p className="text-xs text-slate-500 font-bold">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">
                     {lang === 'bn' ? 'এই কিউআর কোডটি স্ক্যান করে অন্য ডিভাইসে হিসাবটি ওপেন করুন' : 'Scan this QR code to open the calculation on another device'}
                   </p>
                   <button 
@@ -2246,7 +2299,7 @@ export default function App() {
                         setTimeout(() => setError(null), 3000);
                       } catch (e) {}
                     }}
-                    className="text-[10px] text-emerald-600 font-black flex items-center justify-center gap-1 hover:underline"
+                    className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black flex items-center justify-center gap-1 hover:underline"
                   >
                     <Share2 size={12} />
                     {lang === 'bn' ? 'লিঙ্ক কপি করুন' : 'Copy Link'}
@@ -2297,16 +2350,16 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative"
+                className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative transition-colors border border-slate-100 dark:border-slate-800"
               >
-                <div className="bg-emerald-600 p-6 text-white relative">
+                <div className="bg-emerald-600 dark:bg-emerald-800 p-6 text-white relative transition-colors">
                   <button 
                     onClick={() => setIsFeedbackOpen(false)}
                     className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/20 transition-colors"
                   >
                     <X size={20} />
                   </button>
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-md">
                     <MessageSquare size={24} />
                   </div>
                   <h3 className="text-xl font-black uppercase tracking-tight leading-tight">
@@ -2316,21 +2369,21 @@ export default function App() {
 
                 <form onSubmit={handleFeedbackSubmit} className="p-6 space-y-6">
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                    <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
                       {t.feedbackType}
                     </label>
                     <div className="flex gap-2">
                        <button
                          type="button"
                          onClick={() => setFeedbackType('suggestion')}
-                         className={`flex-1 py-3 px-2 rounded-xl text-[10px] font-bold uppercase transition-all border-2 ${feedbackType === 'suggestion' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                         className={`flex-1 py-3 px-2 rounded-xl text-[10px] font-bold uppercase transition-all border-2 ${feedbackType === 'suggestion' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                        >
                          {t.suggestion}
                        </button>
                        <button
                          type="button"
                          onClick={() => setFeedbackType('discrepancy')}
-                         className={`flex-1 py-3 px-2 rounded-xl text-[10px] font-bold uppercase transition-all border-2 ${feedbackType === 'discrepancy' ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-slate-100 text-slate-400 hover:bg-slate-50'}`}
+                         className={`flex-1 py-3 px-2 rounded-xl text-[10px] font-bold uppercase transition-all border-2 ${feedbackType === 'discrepancy' ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400' : 'border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800'}`}
                        >
                          {t.discrepancy}
                        </button>
@@ -2338,7 +2391,7 @@ export default function App() {
                   </div>
 
                   <div>
-                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                     <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
                       {t.message}
                     </label>
                     <textarea 
@@ -2346,16 +2399,16 @@ export default function App() {
                       onChange={(e) => setFeedbackMessage(e.target.value)}
                       required
                       placeholder={lang === 'bn' ? 'আপনার মতামত এখানে লিখুন...' : 'Write your feedback here...'}
-                      className="w-full h-32 px-4 py-3 rounded-xl border border-slate-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-medium resize-none bg-slate-50"
+                      className="w-full h-32 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-medium resize-none bg-slate-50 dark:bg-slate-800/50 dark:text-slate-200"
                     />
                   </div>
 
                   {!user && (
-                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-                      <div className="p-1.5 bg-amber-100 rounded-lg text-amber-600">
+                    <div className="p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/30 flex items-start gap-3 transition-colors">
+                      <div className="p-1.5 bg-amber-100 dark:bg-amber-900/40 rounded-lg text-amber-600 dark:text-amber-400">
                         <Info size={14} />
                       </div>
-                      <p className="text-[10px] text-amber-700 font-bold leading-relaxed">
+                      <p className="text-[10px] text-amber-700 dark:text-amber-300 font-bold leading-relaxed">
                         {lang === 'bn' ? 'মতামত দিতে আপনাকে অবশ্যই লগইন করতে হবে।' : 'You must be logged in to submit feedback.'}
                       </p>
                     </div>
@@ -2364,7 +2417,7 @@ export default function App() {
                   <button 
                     type="submit"
                     disabled={isSubmittingFeedback || !user}
-                    className={`w-full py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all ${isSubmittingFeedback || !user ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 shadow-lg active:shadow-none'}`}
+                    className={`w-full py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all ${isSubmittingFeedback || !user ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 shadow-lg active:shadow-none'}`}
                   >
                     {isSubmittingFeedback ? (
                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -2412,16 +2465,16 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-white max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden relative z-10 border border-slate-100"
+              className="bg-white dark:bg-slate-900 max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden relative z-10 border border-slate-100 dark:border-slate-800 transition-colors"
             >
               <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                  <Languages className="text-emerald-600" size={32} />
+                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6 transition-colors">
+                  <Languages className="text-emerald-600 dark:text-emerald-400" size={32} />
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 mb-3 tracking-tight">
                   {lang === 'bn' ? 'ভাষা নির্বাচন করুন' : lang === 'ar' ? 'اختر اللغة' : 'Choose Language'}
                 </h2>
-                <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed">
                   {lang === 'bn' ? 'আপনার সুবিধামতো ভাষাটি বেছে নিন। পরে সেটিংসে পরিবর্তন করতে পারবেন।' : 
                    lang === 'ar' ? 'حدد لغتك المفضلة. يمكنك تغيير هذا لاحقاً من الإعدادات.' : 
                    'Select your preferred language. You can change this later in settings.'}
@@ -2436,7 +2489,7 @@ export default function App() {
                     <button
                       key={item.id}
                       onClick={() => setLang(item.id as any)}
-                      className={`w-full p-4 rounded-2xl flex items-center justify-between transition-all border-2 ${lang === item.id ? 'border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-sm' : 'border-slate-50 bg-slate-50/50 text-slate-600 hover:bg-slate-100'}`}
+                      className={`w-full p-4 rounded-2xl flex items-center justify-between transition-all border-2 ${lang === item.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-100 font-bold shadow-sm' : 'border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{item.icon}</span>
@@ -2449,7 +2502,7 @@ export default function App() {
 
                 <button
                   onClick={() => handleConfirmLanguage(lang)}
-                  className="w-full mt-8 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-[0.98]"
+                  className="w-full mt-8 bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 dark:shadow-emerald-900/40 active:scale-[0.98]"
                 >
                   {lang === 'bn' ? 'চালিয়ে যান' : lang === 'ar' ? 'استمرار' : 'Continue'}
                 </button>
@@ -2470,27 +2523,27 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-white max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center"
+              className="bg-white dark:bg-slate-900 max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center transition-colors"
             >
-              <div className="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Save className="text-emerald-600" size={32} />
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Save className="text-emerald-600 dark:text-emerald-400" size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+              <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 uppercase tracking-tight">
                 {t.confirmSaveTitle}
               </h3>
-              <p className="text-slate-500 text-sm mb-8 font-medium">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 font-medium">
                 {t.confirmSaveDesc}
               </p>
               <div className="flex flex-col gap-3">
                 <button
                   onClick={confirmSave}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-[0.98]"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 dark:shadow-none active:scale-[0.98]"
                 >
                   {t.confirmSaveButton}
                 </button>
                 <button
                   onClick={() => setIsSaveConfirmOpen(false)}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-2xl font-black transition-all active:scale-[0.98]"
+                  className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 py-4 rounded-2xl font-black transition-all active:scale-[0.98]"
                 >
                   {t.confirmCancelButton}
                 </button>
@@ -2511,15 +2564,15 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-white max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center"
+              className="bg-white dark:bg-slate-900 max-w-sm w-full rounded-[2.5rem] shadow-2xl overflow-hidden p-8 text-center transition-colors"
             >
-              <div className="w-16 h-16 bg-amber-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Zap className="text-amber-600" size={32} />
+              <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <Zap className="text-amber-600 dark:text-amber-400" size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">
+              <h3 className="text-xl font-black text-slate-900 dark:text-slate-100 mb-2 uppercase tracking-tight">
                 {t.planLimitTitle}
               </h3>
-              <p className="text-slate-500 text-sm mb-8 font-medium">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 font-medium">
                 {t.planLimitDesc}
               </p>
               <div className="flex flex-col gap-3">
@@ -2528,14 +2581,14 @@ export default function App() {
                     setIsPlanLimitModalOpen(false);
                     setIsSubscriptionModalOpen(true);
                   }}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 dark:shadow-none active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   <Crown size={18} />
                   {lang === 'bn' ? 'প্রো-তে আপগ্রেড করুন' : lang === 'ar' ? 'ترقية إلى برو' : 'Upgrade to Pro'}
                 </button>
                 <button
                   onClick={() => setIsPlanLimitModalOpen(false)}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-4 rounded-2xl font-black transition-all active:scale-[0.98]"
+                  className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 py-4 rounded-2xl font-black transition-all active:scale-[0.98]"
                 >
                   {t.confirmCancelButton}
                 </button>
@@ -2555,8 +2608,10 @@ export default function App() {
         assets={assets}
         heirs={counts}
         heirNames={heirNames}
+        isDarkMode={isDarkMode}
+        calculationSteps={result?.steps || []}
       />
-      <SpiritualTools lang={lang} isOpen={isSpiritualToolsOpen} onClose={() => setIsSpiritualToolsOpen(false)} />
+      <SpiritualTools lang={lang} isOpen={isSpiritualToolsOpen} onClose={() => setIsSpiritualToolsOpen(false)} isDarkMode={isDarkMode} />
       <UserSettings 
         lang={lang} 
         isOpen={isUserSettingsOpen} 
@@ -2564,15 +2619,16 @@ export default function App() {
         onLanguageChange={(newLang) => setLang(newLang)}
         currentPlan={currentPlan}
         onUpgradeClick={() => setIsSubscriptionModalOpen(true)}
+        isDarkMode={isDarkMode}
       />
 
       <footer className="py-4 mt-2 px-2 text-center">
         <div className="max-w-4xl mx-auto opacity-30 flex flex-col items-center gap-2">
-           <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-900">{t.footerTitle}</span>
-           <span className="text-[7px] font-bold text-slate-400">{t.footerCopy}</span>
+           <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-900 dark:text-slate-100 transition-colors">{t.footerTitle}</span>
+           <span className="text-[7px] font-bold text-slate-400 dark:text-slate-500 transition-colors">{t.footerCopy}</span>
            <button 
              onClick={() => setIsPrivacyPolicyOpen(true)}
-             className="text-[7px] font-black text-emerald-600 uppercase tracking-widest hover:underline mt-1"
+             className="text-[7px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest hover:underline mt-1 transition-colors"
            >
              {t.privacyPolicy.title}
            </button>
@@ -2582,12 +2638,14 @@ export default function App() {
         lang={lang} 
         isOpen={isPrivacyPolicyOpen} 
         onClose={() => setIsPrivacyPolicyOpen(false)} 
+        isDarkMode={isDarkMode}
       />
       <SubscriptionModal
         lang={lang}
         isOpen={isSubscriptionModalOpen}
         onClose={() => setIsSubscriptionModalOpen(false)}
         currentPlan={currentPlan}
+        isDarkMode={isDarkMode}
         onUpgrade={async (plan) => {
           if (user) {
             try {

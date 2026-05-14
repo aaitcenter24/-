@@ -12,6 +12,7 @@ interface PrivacyPolicyProps {
   isOpen: boolean;
   onClose: () => void;
   lang: 'bn' | 'en' | 'ar';
+  isDarkMode?: boolean;
 }
 
 const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isOpen, onClose, lang }) => {
@@ -62,7 +63,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isOpen, onClose, lang }) 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         dir={lang === 'ar' ? 'rtl' : 'ltr'}
-        className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]"
+        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] transition-colors"
       >
         {/* Header */}
         <div className="bg-emerald-600 p-8 text-white shrink-0 relative overflow-hidden">
@@ -103,8 +104,8 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isOpen, onClose, lang }) 
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-          <p className={`text-sm font-semibold text-slate-600 leading-relaxed italic ${lang === 'ar' ? 'border-r-4 pr-4' : 'border-l-4 pl-4'} border-emerald-500 bg-emerald-50/50 py-4 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-1 duration-500`}>
+        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar transition-colors">
+          <p className={`text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed italic ${lang === 'ar' ? 'border-r-4 pr-4' : 'border-l-4 pl-4'} border-emerald-500 bg-emerald-50/50 dark:bg-emerald-900/20 py-4 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-1 duration-500`}>
             {t.intro}
           </p>
 
@@ -115,40 +116,40 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isOpen, onClose, lang }) 
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
-                className="space-y-3 p-5 bg-slate-50 rounded-3xl border border-slate-100 hover:border-emerald-200 hover:bg-white hover:shadow-md transition-all group"
+                className="space-y-3 p-5 bg-slate-50 dark:bg-slate-800/40 rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all group"
               >
-                <div className="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Icon size={20} />
                 </div>
-                <h4 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">
                   {t[key].title}
                 </h4>
-                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">
+                <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
                   {t[key].desc}
                 </p>
               </motion.div>
             ))}
           </div>
           
-          <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-[2rem] border-2 border-amber-100 border-dashed">
-            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest text-center leading-relaxed">
+          <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 rounded-[2rem] border-2 border-amber-100 dark:border-amber-900/30 border-dashed transition-colors">
+            <p className="text-[10px] font-black text-amber-700 dark:text-amber-200 uppercase tracking-widest text-center leading-relaxed">
               {t.commitment}
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex flex-col sm:flex-row gap-3">
+        <div className="p-6 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 shrink-0 flex flex-col sm:flex-row gap-3 transition-colors">
           <button 
             onClick={handleShare}
-            className="flex-1 py-4 rounded-2xl bg-white border-2 border-emerald-100 text-emerald-600 text-xs font-black uppercase tracking-[0.2em] hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
+            className="flex-1 py-4 rounded-2xl bg-white dark:bg-slate-800 border-2 border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-[0.2em] hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-all flex items-center justify-center gap-2"
           >
             <Share2 size={16} />
             {t.share}
           </button>
           <button 
             onClick={onClose}
-            className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-200 hover:bg-emerald-700 active:scale-95 transition-all"
+            className="flex-[2] py-4 rounded-2xl bg-emerald-600 text-white text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-200 dark:shadow-none hover:bg-emerald-700 active:scale-95 transition-all"
           >
             {t.close}
           </button>

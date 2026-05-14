@@ -36,11 +36,12 @@ interface SpiritualToolsProps {
   country?: string;
   isOpen: boolean;
   onClose: () => void;
+  isDarkMode?: boolean;
 }
 
 const KAABA_COORDS = { lat: 21.4225, lng: 39.8262 };
 
-const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, onClose }) => {
+const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, onClose, isDarkMode }) => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [cityName, setCityName] = useState<string>('');
   const [addressInput, setAddressInput] = useState<string>('');
@@ -179,13 +180,13 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
       />
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]"
+        className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] transition-colors"
       >
         <div className="bg-emerald-600 p-5 text-white shrink-0 relative">
           <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -208,26 +209,26 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
           </div>
         </div>
 
-        <div className="flex border-b border-slate-100 shrink-0">
+        <div className="flex border-b border-slate-100 dark:border-slate-800 shrink-0 transition-colors">
           <button 
             onClick={() => setView('prayer')}
-            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'prayer' ? 'text-emerald-600 bg-emerald-50 border-b-2 border-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'prayer' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
           >
             <Clock size={16} />
             {t.prayerTimes}
           </button>
           <button 
             onClick={() => setView('qibla')}
-            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'qibla' ? 'text-emerald-600 bg-emerald-50 border-b-2 border-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'qibla' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
           >
             <Compass size={16} />
             {t.qibla}
           </button>
         </div>
 
-        <div className="px-6 pt-6 shrink-0">
+        <div className="px-6 pt-6 shrink-0 transition-colors">
           <div className="relative group">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-emerald-500 transition-colors">
               <Search size={16} />
             </div>
             <input 
@@ -236,13 +237,13 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
               onChange={(e) => setAddressInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && fetchByAddress(addressInput)}
               placeholder={t.searchPlaceholder}
-              className="w-full pl-11 pr-24 py-3.5 bg-slate-100 border-2 border-transparent rounded-[1.25rem] text-sm font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all shadow-inner"
+              className="w-full pl-11 pr-24 py-3.5 bg-slate-100 dark:bg-slate-800 border-2 border-transparent rounded-[1.25rem] text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:bg-white dark:focus:bg-slate-700 focus:border-emerald-500 transition-all shadow-inner"
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {addressInput && (
                 <button 
                   onClick={() => setAddressInput('')}
-                  className="p-2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="p-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
                   <CloseIcon size={14} />
                 </button>
@@ -250,7 +251,7 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
               <button 
                 onClick={() => fetchByAddress(addressInput)}
                 disabled={loading || !addressInput.trim()}
-                className="h-10 px-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:bg-slate-300 disabled:shadow-none transition-all"
+                className="h-10 px-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 dark:hover:shadow-emerald-900/40 disabled:opacity-50 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:shadow-none transition-all"
               >
                 {t.searchButton}
               </button>
@@ -258,7 +259,7 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 transition-colors">
           <AnimatePresence mode="wait">
             {loading ? (
               <motion.div 
@@ -268,8 +269,8 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center h-full py-12"
               >
-                <Loader2 size={32} className="text-emerald-600 animate-spin mb-4" />
-                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">{t.loading}</p>
+                <Loader2 size={32} className="text-emerald-600 dark:text-emerald-400 animate-spin mb-4" />
+                <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t.loading}</p>
               </motion.div>
             ) : error ? (
               <motion.div 
@@ -279,10 +280,10 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center h-full py-12 text-center"
               >
-                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-full flex items-center justify-center mb-4">
                   <AlertCircle size={32} />
                 </div>
-                <p className="text-sm font-bold text-slate-800 mb-2">{error}</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">{error}</p>
                 <button 
                   onClick={detectLocation}
                   className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
@@ -304,22 +305,22 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
                   return (
                     <div 
                       key={key} 
-                      className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl group hover:border-emerald-200 hover:bg-emerald-50/50 transition-all"
+                      className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl group hover:border-emerald-200 dark:hover:border-emerald-800 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
                           <Icon size={20} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
+                          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">
                             {t[key.toLowerCase() as keyof typeof t]}
                           </p>
-                          <p className="text-lg font-black text-slate-800 leading-none">
+                          <p className="text-lg font-black text-slate-800 dark:text-slate-100 leading-none">
                             {formatTime(prayerTimes[key])}
                           </p>
                         </div>
                       </div>
-                      <ChevronRight size={16} className="text-slate-200 group-hover:text-emerald-300" />
+                      <ChevronRight size={16} className="text-slate-200 dark:text-slate-700 group-hover:text-emerald-300" />
                     </div>
                   );
                 })}
@@ -333,25 +334,25 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
                 className="flex flex-col items-center justify-center py-6"
               >
                 <div className="relative w-48 h-48 mb-8">
-                  <div className="absolute inset-0 bg-emerald-50 rounded-full flex items-center justify-center">
-                    <Compass size={120} className="text-emerald-100" />
+                  <div className="absolute inset-0 bg-emerald-50 dark:bg-emerald-900/10 rounded-full flex items-center justify-center">
+                    <Compass size={120} className="text-emerald-100 dark:text-emerald-900/30" />
                   </div>
                   <motion.div 
                     animate={{ rotate: qiblaDirection }}
                     transition={{ type: 'spring', stiffness: 50 }}
                     className="absolute inset-0 flex items-center justify-center"
                   >
-                    <div className="relative w-1 h-32 bg-emerald-600 rounded-full">
-                      <div className="absolute -top-1 -left-1.5 w-4 h-4 bg-emerald-600 rotate-45 rounded-sm" />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-emerald-600 rounded-full" />
+                    <div className="relative w-1 h-32 bg-emerald-600 dark:bg-emerald-400 rounded-full">
+                      <div className="absolute -top-1 -left-1.5 w-4 h-4 bg-emerald-600 dark:bg-emerald-400 rotate-45 rounded-sm" />
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white dark:bg-slate-900 border-2 border-emerald-600 dark:border-emerald-400 rounded-full" />
                     </div>
                   </motion.div>
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 text-[10px] font-black text-red-500 uppercase">N</div>
                 </div>
 
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t.qiblaDegree}</p>
-                  <p className="text-3xl font-black text-emerald-900 tracking-tight">
+                  <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{t.qiblaDegree}</p>
+                  <p className="text-3xl font-black text-emerald-900 dark:text-emerald-200 tracking-tight">
                     {Math.round(qiblaDirection)}°
                   </p>
                 </div>
@@ -360,10 +361,10 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
           </AnimatePresence>
         </div>
 
-        <div className="p-4 bg-slate-50 border-t border-slate-100 shrink-0">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 shrink-0 transition-colors">
           <button 
             onClick={detectLocation}
-            className="w-full flex items-center justify-center gap-2 py-3.5 bg-white border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 active:scale-95 transition-all shadow-sm"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             {t.detectLocation}

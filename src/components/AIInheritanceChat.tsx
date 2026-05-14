@@ -5,9 +5,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Scale } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Scale as ScaleIcon } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
+import { CalculationStep, HEIRS } from '../types';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -29,6 +30,8 @@ interface AIInheritanceChatProps {
   };
   heirs?: Record<string, number>;
   heirNames?: Record<string, string[]>;
+  calculationSteps?: CalculationStep[];
+  isDarkMode?: boolean;
 }
 
 const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({ 
@@ -40,7 +43,9 @@ const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({
   madhhab,
   assets,
   heirs,
-  heirNames
+  heirNames,
+  calculationSteps = [],
+  isDarkMode
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -83,6 +88,26 @@ const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
       const model = "gemini-3-flash-preview";
       
+      // Filter calculation steps relevant to the user query
+      const relevantSteps = calculationSteps.filter(step => {
+        const queryLower = userMessage.toLowerCase();
+        // Check if heir names related to the step are mentioned in the query
+        const matchesHeirId = step.heirIds.some(id => {
+          const heir = HEIRS.find(h => h.id === id);
+          if (!heir) return false;
+          return queryLower.includes(heir.nameEn.toLowerCase()) || 
+                 queryLower.includes(heir.nameBn.toLowerCase()) || 
+                 queryLower.includes(heir.nameAr.toLowerCase()) ||
+                 queryLower.includes(id.toLowerCase());
+        });
+        
+        // Also check if text itself contains keywords
+        const keywords = ['share', 'calculate', 'portion', 'division', 'অংশ', 'হিসাব', 'বণ্টন', 'نصيب', 'حساب', 'توزيع'];
+        const matchesKeyword = keywords.some(k => queryLower.includes(k) && step.text.toLowerCase().includes(k));
+        
+        return matchesHeirId || matchesKeyword;
+      });
+
       const context = {
         deceasedInfo: {
           name: deceasedName || null,
@@ -101,11 +126,12 @@ const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({
             type: id,
             count: count,
             individualNames: heirNames?.[id]?.filter(Boolean) || []
-          })) : []
+          })) : [],
+        relevantCalculationSteps: relevantSteps.length > 0 ? relevantSteps.map(s => s.text) : calculationSteps.map(s => s.text)
       };
 
       const contextStr = (deceasedName || country || madhhab || heirs || assets) 
-        ? `\n\nCURRENT CALCULATION STATE (JSON):\n${JSON.stringify(context, null, 2)}\n\nUse this data to provide contextually accurate advice.` 
+        ? `\n\nCURRENT CALCULATION STATE (JSON):\n${JSON.stringify(context, null, 2)}\n\nUse this data to provide contextually accurate advice and explain the calculation steps if the user asks. If relevantSteps are provided, prioritize explaining those.` 
         : "";
 
       const systemInstruction = `You are a specialized AI assistant for Islamic Inheritance (Ilm al-Fara'id). Your name is 'Heritage Matrix Assistant'. 
@@ -149,7 +175,7 @@ Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULAT
               initial={{ opacity: 0, y: 50, scale: 0.9, transformOrigin: 'bottom right' }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 50, scale: 0.9 }}
-              className="w-full h-[100dvh] md:h-[600px] md:w-[400px] bg-white md:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 pointer-events-auto"
+              className="w-full h-[100dvh] md:h-[600px] md:w-[400px] bg-white dark:bg-slate-900 md:rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800 pointer-events-auto transition-colors"
             >
               {/* Header */}
               <div className="bg-emerald-600 p-4 text-white shrink-0 relative">
@@ -161,7 +187,7 @@ Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULAT
                 <div className="flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center ring-2 ring-white/30">
-                      <Scale size={20} className="text-white" />
+                      <ScaleIcon size={20} className="text-white" />
                     </div>
                     <div>
                       <h3 className="text-sm font-black uppercase tracking-tight leading-tight">{t.title}</h3>
@@ -180,7 +206,7 @@ Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULAT
               {/* Messages Area */}
               <div 
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50"
+                className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/50 transition-colors"
               >
                 {messages.map((message, index) => (
                   <div 
@@ -196,9 +222,9 @@ Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULAT
                       <div className={`p-3 rounded-2xl text-sm shadow-sm ${
                         message.role === 'user' 
                           ? 'bg-indigo-600 text-white rounded-tr-none' 
-                          : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none font-medium'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-100 dark:border-slate-700 rounded-tl-none font-medium'
                       }`}>
-                        <div className="markdown-body">
+                        <div className="markdown-body dark:prose-invert prose-sm max-w-none">
                           <Markdown>{message.content}</Markdown>
                         </div>
                       </div>
@@ -211,7 +237,7 @@ Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULAT
                       <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
                         <Bot size={16} />
                       </div>
-                      <div className="p-3 bg-white text-slate-400 border border-slate-100 rounded-2xl rounded-tl-none flex items-center gap-2">
+                      <div className="p-3 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-100 dark:border-slate-700 rounded-2xl rounded-tl-none flex items-center gap-2">
                         <Loader2 size={14} className="animate-spin" />
                         <span className="text-xs font-bold uppercase tracking-widest">{lang === 'bn' ? 'চিন্তা করছি...' : lang === 'ar' ? 'يفكر...' : 'Thinking...'}</span>
                       </div>
@@ -221,27 +247,27 @@ Respond concisely but thoroughly where needed. Use the provided CURRENT CALCULAT
               </div>
 
               {/* Input Area */}
-              <div className="p-4 bg-white border-t border-slate-100 shrink-0">
-                <div className="relative">
+              <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shrink-0 transition-colors">
+                <div className="relative group">
                   <input 
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                     placeholder={t.placeholder}
-                    className="w-full pl-4 pr-12 py-3.5 bg-slate-100 border-2 border-transparent rounded-xl text-sm font-bold text-slate-700 outline-none focus:bg-white focus:border-emerald-500 transition-all shadow-inner"
+                    className="w-full pl-4 pr-12 py-3.5 bg-slate-100 dark:bg-slate-800 border-2 border-transparent rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:bg-white dark:focus:bg-slate-700 focus:border-emerald-500 transition-all shadow-inner"
                   />
                   <button 
                     onClick={handleSend}
                     disabled={!input.trim() || isLoading}
-                    className="absolute right-1.5 top-1.5 h-10 w-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+                    className="absolute right-1.5 top-1.5 h-10 w-10 bg-emerald-600 text-white rounded-lg flex items-center justify-center hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale shadow-sm"
                   >
                     <Send size={18} />
                   </button>
                 </div>
                 <div className="mt-3 flex items-center justify-center gap-2">
                   <Sparkles size={10} className="text-emerald-500" />
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+                  <span className="text-[9px] font-black text-slate-300 dark:text-slate-600 uppercase tracking-widest">
                     AI Powered Inheritance Consultation
                   </span>
                 </div>

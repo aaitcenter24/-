@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Star, Zap, Crown, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
 import { TRANSLATIONS } from '../lib/translations';
 
+import { getCountryConfig } from '../lib/countryConfig';
+
 interface SubscriptionModalProps {
   lang: 'bn' | 'en' | 'ar';
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface SubscriptionModalProps {
   currentPlan?: 'free' | 'pro';
   onUpgrade?: (plan: 'pro') => void;
   isDarkMode?: boolean;
+  countryCode: string;
 }
 
 const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ 
@@ -22,10 +25,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   isOpen, 
   onClose, 
   currentPlan = 'free',
-  onUpgrade 
+  onUpgrade,
+  countryCode
 }) => {
   const t = TRANSLATIONS[lang].subscriptions;
   const isRtl = lang === 'ar';
+  const country = getCountryConfig(countryCode);
+  const proPrice = country.subscriptionPrice?.pro || t.pro.price;
 
   if (!isOpen) return null;
 
@@ -168,7 +174,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 <div className="relative z-10">
                   <h4 className="text-xl font-black uppercase tracking-tight">{t.pro.name}</h4>
                   <p className={`text-2xl font-bold mt-1 ${currentPlan === 'pro' ? 'text-emerald-700 dark:text-emerald-400' : 'text-emerald-50'}`}>
-                    {t.pro.price}
+                    {proPrice}
                   </p>
                 </div>
                 <ul className="space-y-3 relative z-10">
@@ -200,6 +206,19 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 {currentPlan !== 'pro' && <ArrowRight size={14} />}
               </button>
             </motion.div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] text-center">
+              {lang === 'bn' ? 'সমর্থিত পেমেন্ট মেথড' : lang === 'ar' ? 'وسائل الدفع المدعومة' : 'Supported Payment Methods'}
+            </h4>
+            <div className="flex flex-wrap justify-center gap-2">
+              {country.paymentMethods.map(method => (
+                <span key={method} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] font-black uppercase rounded-lg border border-slate-200 dark:border-slate-700">
+                  {method}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="text-center">

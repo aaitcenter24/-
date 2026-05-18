@@ -19,7 +19,10 @@ import {
   LogOut,
   ChevronRight,
   ShieldCheck,
-  Mail
+  Mail,
+  Image,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import { auth, getUserProfile, updateUserProfile, logout } from '../lib/firebase';
 import { TRANSLATIONS } from '../lib/translations';
@@ -51,9 +54,15 @@ const UserSettings: React.FC<UserSettingsProps> = ({
   const [success, setSuccess] = useState<string | null>(null);
 
   const [displayName, setDisplayName] = useState('');
+  const [address, setAddress] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [designation, setDesignation] = useState('');
+  const [showDesignationDropdown, setShowDesignationDropdown] = useState(false);
+  const designationOptions = ['Lawyer', 'Surveyor', 'Amin', 'Notary Public', 'Consultant', 'Manager'];
   const [maritalStatus, setMaritalStatus] = useState('notSpecified');
   const [notificationLanguage, setNotificationLanguage] = useState(lang);
   const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
 
   const t = TRANSLATIONS[lang] as any;
 
@@ -66,10 +75,14 @@ const UserSettings: React.FC<UserSettingsProps> = ({
           const data = await getUserProfile(auth.currentUser.uid);
           if (data) {
             setProfile(data);
-            setDisplayName(data.displayName || auth.currentUser.displayName || '');
+            setDisplayName(data.displayName || data.name || auth.currentUser.displayName || '');
+            setAddress(data.address || '');
+            setMobile(data.mobile || '');
+            setDesignation(data.designation || '');
             setMaritalStatus(data.maritalStatus || 'notSpecified');
             setNotificationLanguage(data.notificationLanguage || lang);
             setEmailNotificationsEnabled(data.emailNotificationsEnabled !== false);
+            setCustomLogo(data.customLogo || null);
           }
         } catch (err) {
           console.error(err);
@@ -85,6 +98,22 @@ const UserSettings: React.FC<UserSettingsProps> = ({
     }
   }, [isOpen, lang]);
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      setError(lang === 'bn' ? 'ফাইল সাইজ ৫০০কিব এর কম হতে হবে' : 'File must be under 500KB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCustomLogo(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     if (!auth.currentUser) return;
 
@@ -95,9 +124,13 @@ const UserSettings: React.FC<UserSettingsProps> = ({
 
       await updateUserProfile(auth.currentUser.uid, {
         displayName,
+        address,
+        mobile,
+        designation,
         maritalStatus,
         notificationLanguage,
         emailNotificationsEnabled,
+        customLogo,
       });
 
       setSuccess(t.profileUpdated);
@@ -229,51 +262,199 @@ const UserSettings: React.FC<UserSettingsProps> = ({
                 </div>
               </section>
 
-              {/* Profile Section */}
+              {/* General Information Section */}
               <section className="space-y-6">
                 <div className="flex items-center gap-3 px-2">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl transition-colors">
-                    <User size={18} className="text-slate-600 dark:text-slate-300" />
+                  <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl transition-colors">
+                    <User size={18} className="text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{(t as any).profile}</h3>
+                  <h3 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{lang === 'bn' ? 'ব্যক্তিগত তথ্য' : lang === 'ar' ? 'معلومات الشخصية' : 'Personal Details'}</h3>
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-inner transition-colors">
+                <div className="grid grid-cols-1 gap-5 bg-white dark:bg-slate-800/30 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">
+                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                      <User size={10} className="text-emerald-500" />
                       {lang === 'bn' ? 'পুরো নাম' : lang === 'ar' ? 'الاسم الكامل' : 'Full Name'}
                     </label>
                     <input 
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full px-5 py-3.5 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 focus:border-emerald-500 outline-none transition-all shadow-sm"
+                      placeholder="e.g. John Doe"
+                      className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">
-                      {(t as any).maritalStatus}
+                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                      <Mail size={10} className="text-blue-500" />
+                      {lang === 'bn' ? 'যোগাযোগের ইমেইল' : lang === 'ar' ? 'البريد الإلكتروني' : 'Contact Email'}
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['single', 'married', 'divorced', 'widowed', 'notSpecified'].map((status) => (
-                        <button
-                          key={status}
-                          onClick={() => setMaritalStatus(status)}
-                          className={`px-4 py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-tight transition-all flex items-center justify-between group ${
-                            maritalStatus === status 
-                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-400' 
-                              : 'border-white dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600 text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          {(t as any)[status]}
-                          {maritalStatus === status && <Check size={14} className="text-emerald-500" />}
-                        </button>
-                      ))}
+                    <input 
+                      type="email"
+                      value={currentUser?.email || ''}
+                      disabled
+                      className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800/50 border-2 border-transparent rounded-2xl text-sm font-bold text-slate-400 dark:text-slate-600 cursor-not-allowed outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                        <Heart size={10} className="text-rose-500" />
+                        {(t as any).maritalStatus}
+                      </label>
+                      <select 
+                        value={maritalStatus}
+                        onChange={(e) => setMaritalStatus(e.target.value)}
+                        className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none transition-all appearance-none"
+                      >
+                        {['single', 'married', 'divorced', 'widowed', 'notSpecified'].map((status) => (
+                          <option key={status} value={status}>{(t as any)[status]}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2 relative">
+                      <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                        <ShieldCheck size={10} className="text-amber-500" />
+                        {lang === 'bn' ? 'পদবী' : 'Designation'}
+                      </label>
+                      <div className="relative group">
+                        <input 
+                          type="text"
+                          value={designation}
+                          onChange={(e) => {
+                            setDesignation(e.target.value);
+                            setShowDesignationDropdown(true);
+                          }}
+                          onFocus={() => setShowDesignationDropdown(true)}
+                          onBlur={() => setTimeout(() => setShowDesignationDropdown(false), 200)}
+                          placeholder="e.g. Surveyor or Custom Role"
+                          className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none transition-all"
+                        />
+                        <AnimatePresence>
+                          {showDesignationDropdown && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden z-[50]"
+                            >
+                              <div className="p-1">
+                                {designationOptions
+                                  .filter(opt => opt.toLowerCase().includes(designation.toLowerCase()))
+                                  .map((opt) => (
+                                    <button
+                                      key={opt}
+                                      onClick={() => {
+                                        setDesignation(opt);
+                                        setShowDesignationDropdown(false);
+                                      }}
+                                      className="w-full text-left px-4 py-2 text-xs font-black text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition-colors uppercase tracking-widest"
+                                    >
+                                      {opt}
+                                    </button>
+                                  ))}
+                                {designation && !designationOptions.some(opt => opt.toLowerCase() === designation.toLowerCase()) && (
+                                  <div className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-t border-slate-50 dark:border-slate-750 mt-1">
+                                    Press Enter for custom role
+                                  </div>
+                                )}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                      <ChevronRight size={10} className="text-indigo-500" />
+                      {lang === 'bn' ? 'ঠিকানা ও যোগাযোগ' : lang === 'ar' ? 'العنوان والاتصال' : 'Address & Contact'}
+                    </label>
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <Globe size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input 
+                          type="text"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Mailing Address"
+                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none transition-all"
+                        />
+                      </div>
+                      <div className="relative">
+                        <Heart size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input 
+                          type="text"
+                          value={mobile}
+                          onChange={(e) => setMobile(e.target.value)}
+                          placeholder="Mobile Number"
+                          className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900 border-2 border-transparent focus:border-emerald-500 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Custom Logo Section */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                        <Image size={10} className="text-emerald-500" />
+                        {lang === 'bn' ? 'কাস্টম লোগো (রিপোর্টের জন্য)' : lang === 'ar' ? 'شعار مخصص (للتقارير)' : 'Custom Logo (For Reports)'}
+                      </label>
+                      {currentPlan === 'free' && (
+                        <span className="text-[8px] font-black bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                          {lang === 'bn' ? 'প্রো ফিচার' : 'Pro Feature'}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className={`relative ${currentPlan === 'free' ? 'opacity-50 pointer-events-none' : ''}`}>
+                      {customLogo ? (
+                        <div className="relative group w-40 h-20 bg-slate-50 dark:bg-slate-900 rounded-2xl border-2 border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center p-2">
+                          <img 
+                            src={customLogo} 
+                            alt="Custom Logo" 
+                            className="max-w-full max-h-full object-contain"
+                            referrerPolicy="no-referrer"
+                          />
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <label className="p-2 bg-white/20 hover:bg-white/30 rounded-lg cursor-pointer transition-colors">
+                              <Upload size={16} className="text-white" />
+                              <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                            </label>
+                            <button 
+                              onClick={() => setCustomLogo(null)}
+                              className="p-2 bg-rose-500/20 hover:bg-rose-500/40 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={16} className="text-rose-500" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-32 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <div className="p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm mb-2 group-hover:scale-110 transition-transform">
+                              <Upload size={20} className="text-emerald-500" />
+                            </div>
+                            <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                              {lang === 'bn' ? 'লোগো আপলোড করুন' : 'Upload Report Logo'}
+                            </p>
+                            <p className="text-[8px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
+                              PNG, JPG (MAX 500KB)
+                            </p>
+                          </div>
+                          <input type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                        </label>
+                      )}
                     </div>
                   </div>
                 </div>
               </section>
+
 
               {/* Preferences Section */}
               <section className="space-y-6">

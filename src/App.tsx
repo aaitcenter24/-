@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -36,6 +36,7 @@ import {
   CreditCard,
   Package,
   Globe,
+  Gavel,
   History,
   Bookmark,
   Save,
@@ -50,20 +51,25 @@ import {
   Image as ImageIcon,
   Scale,
   RefreshCw,
+  Sparkles,
   Crown,
   Zap,
   Award,
   Sun,
-  Moon
+  Moon,
+  CheckCircle2
 } from 'lucide-react';
 import UnitConverter from './components/UnitConverter';
 import AIInheritanceChat from './components/AIInheritanceChat';
 import SpiritualTools from './components/SpiritualTools';
+import { generateLegalSummary } from './lib/summaryGenerator';
 import UserSettings from './components/UserSettings';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import SubscriptionModal from './components/SubscriptionModal';
-import { HEIRS, Assets, CalculationResult, Madhhab, CalculationStep } from './types';
+import Onboarding from './components/Onboarding';
+import { HEIRS, Assets, CalculationResult, Madhhab, CalculationStep, CountryCode } from './types';
 import { calculateInheritance } from './lib/inheritance';
+import { COUNTRIES, getCountryConfig } from './lib/countryConfig';
 import { 
   PieChart, 
   Pie, 
@@ -107,6 +113,12 @@ export default function App() {
     return !localStorage.getItem('hasSeenLanguageWelcome');
   });
 
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem('onboarding_completed');
+  });
+
+  const [onboardingSuccessMessage, setOnboardingSuccessMessage] = useState<string | null>(null);
+
   const handleConfirmLanguage = (selectedLang: 'bn' | 'en' | 'ar') => {
     setLang(selectedLang);
     localStorage.setItem('appLang', selectedLang);
@@ -134,8 +146,11 @@ export default function App() {
   const [heirNames, setHeirNames] = useState<Record<string, string[]>>({});
   const [assets, setAssets] = useState<Assets>({ land: 0, money: 0, gold: 0, silver: 0 });
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [editableSummary, setEditableSummary] = useState('');
+  const [isSummaryManuallyEdited, setIsSummaryManuallyEdited] = useState(false);
   const [activeTab, setActiveTab] = useState<'input' | 'result' | 'rules' | 'faq' | 'history' | 'help'>('input');
   const [error, setError] = useState<string | null>(null);
+  const [showRecalculatePrompt, setShowRecalculatePrompt] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -156,7 +171,7 @@ export default function App() {
   const [isSharing, setIsSharing] = useState(false);
   const [sortBy, setSortBy] = useState<'default' | 'name'>('default');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [country, setCountry] = useState<'BD' | 'PK' | 'SA' | 'ZA'>('SA');
+  const [country, setCountry] = useState<CountryCode>('SA');
   const [madhhab, setMadhhab] = useState<Madhhab>('Hanbali');
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -260,11 +275,18 @@ export default function App() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         const profile: any = await syncUserProfile(currentUser);
+        if (profile?.onboardingCompleted) {
+          localStorage.setItem('onboarding_completed', 'true');
+          setShowOnboarding(false);
+        }
         if (profile?.country) {
-          setCountry(profile.country as 'BD' | 'PK' | 'SA' | 'ZA');
+          setCountry(profile.country as CountryCode);
         }
         if (profile?.plan) {
           setCurrentPlan(profile.plan);
+        }
+        if (profile?.customLogo) {
+          setCustomLogo(profile.customLogo);
         }
         // Fetch history immediately to ensure subscription limits are checked correctly
         const data = await getCalculations(currentUser.uid);
@@ -276,28 +298,69 @@ export default function App() {
   }, []);
 
   // Sync country to Firestore if user is logged in
-  const handleCountryChange = async (newCountry: 'BD' | 'PK' | 'SA' | 'ZA') => {
-    setCountry(newCountry);
+  const handleCountrySelect = (code: CountryCode) => {
+    handleCountryChange(code);
+    setIsCountryModalOpen(false);
+  };
+
+  const formatCurrency = (value: number) => {
+    const config = getCountryConfig(country);
     
-    // Set default Madhhab based on country
-    if (newCountry === 'BD' || newCountry === 'PK') setMadhhab('Hanafi');
-    else if (newCountry === 'SA') setMadhhab('Hanbali');
-    else if (newCountry === 'ZA') setMadhhab('Shafi\'i');
+    // Mapping config code to actual ISO currency codes for Intl.NumberFormat
+    const currencyMap: Record<string, string> = {
+      'BD': 'BDT',
+      'PK': 'PKR',
+      'SA': 'SAR',
+      'AE': 'AED',
+      'MY': 'MYR',
+      'ID': 'IDR',
+      'EG': 'EGP',
+      'JO': 'JOD',
+      'KW': 'KWD',
+      'QA': 'QAR',
+      'TR': 'TRY',
+      'MA': 'MAD',
+      'ZA': 'ZAR',
+      'US': 'USD'
+    };
+
+    const currencyCode = currencyMap[config.code] || 'USD';
+
+    if (config.currency.format === 'lakh') {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: currencyCode,
+        currencyDisplay: 'narrowSymbol',
+        maximumFractionDigits: 0
+      }).format(value).replace('BDT', '৳').replace('PKR', '₨');
+    }
+
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      currencyDisplay: 'narrowSymbol',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  const handleCountryChange = async (newCountry: CountryCode) => {
+    const config = getCountryConfig(newCountry);
+    setCountry(newCountry);
+    setLang(config.primaryLanguage as any);
+    setMadhhab(config.defaultMadhhab);
 
     if (user) {
       await syncUserProfile(user, newCountry);
     }
+
+    if (result) {
+      setShowRecalculatePrompt(true);
+    }
   };
 
-  // Auto-switch language and currency when country changes
+  // Auto-switch language and currency when country changes - DEPRECATED in favor of handleCountryChange, but keeping for external triggers
   React.useEffect(() => {
-    if (country === 'BD') {
-      if (lang === 'ar') setLang('bn');
-    } else if (country === 'SA') {
-      if (lang === 'bn') setLang('ar');
-    } else if (country === 'ZA' || country === 'PK') {
-      setLang('en');
-    }
+    // This side effect handles only minor adjustments now
   }, [country]);
 
   // Handle shared calculation link
@@ -328,6 +391,8 @@ export default function App() {
           decoded.m || 'Hanafi'
         );
         setResult(res);
+        setEditableSummary(generateLegalSummary(res, decoded.a || { land: 0, money: 0, gold: 0, silver: 0 }, decoded.l || 'en', decoded.n || ''));
+        setIsSummaryManuallyEdited(false);
         setActiveTab('result');
         
         // Clean URL
@@ -359,10 +424,10 @@ export default function App() {
     }
   };
 
-  const handleCountrySelect = async (selected: 'BD' | 'PK' | 'SA' | 'ZA') => {
+  const handleFirstTimeCountrySelect = async (selected: any) => {
     if (pendingUser) {
       await syncUserProfile(pendingUser, selected);
-      setCountry(selected);
+      handleCountryChange(selected);
       setPendingUser(null);
       setIsCountryModalOpen(false);
     }
@@ -384,7 +449,11 @@ export default function App() {
       }
       
       if (result) {
-        setResult(calculateInheritance(counts, assets, next, deceasedName, heirNames, country, madhhab));
+        const res = calculateInheritance(counts, assets, next, deceasedName, heirNames, country, madhhab);
+        setResult(res);
+        if (!isSummaryManuallyEdited) {
+          setEditableSummary(generateLegalSummary(res, assets, next, deceasedName));
+        }
       }
       return next;
     });
@@ -412,18 +481,57 @@ export default function App() {
   };
 
   const handleAssetChange = (key: keyof Assets, value: string) => {
-    const num = parseFloat(value) || 0;
+    if (value === '') {
+      setAssets(prev => ({ ...prev, [key]: 0 }));
+      return;
+    }
+
+    // Allow only digits and a single decimal point
+    if (!/^\d*\.?\d*$/.test(value)) {
+      setError(t.errorAssetInvalid);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    const num = parseFloat(value);
+    
+    if (isNaN(num)) {
+      setError(t.errorAssetInvalid);
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
     if (num < 0) {
       setError(t.errorAssetNegative);
       setTimeout(() => setError(null), 3000);
       return;
     }
+    
     setAssets(prev => ({ ...prev, [key]: num }));
   };
+
+  const prevTabRef = useRef(activeTab);
+  useEffect(() => {
+    if (prevTabRef.current === 'result' && activeTab !== 'result' && user && result) {
+      // Auto-save when moving away from result tab
+      saveCalculation(user.uid, {
+        deceasedName,
+        heirs: counts,
+        heirNames,
+        assets,
+        country,
+        madhhab,
+        customSummary: editableSummary
+      }).then(() => fetchHistory()).catch(console.error);
+    }
+    prevTabRef.current = activeTab;
+  }, [activeTab]);
 
   const handleCalculate = () => {
     const res = calculateInheritance(counts, assets, lang, deceasedName, heirNames, country, madhhab);
     setResult(res);
+    setEditableSummary(generateLegalSummary(res, assets, lang, deceasedName));
+    setIsSummaryManuallyEdited(false);
     (window as any).lastCalculationSteps = res?.steps || [];
     setActiveTab('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -466,7 +574,8 @@ export default function App() {
         heirNames,
         assets,
         country,
-        madhhab
+        madhhab,
+        customSummary: editableSummary
       });
       setError(lang === 'bn' ? 'সফলভাবে সংরক্ষিত হয়েছে' : 'Saved successfully');
       setTimeout(() => setError(null), 3000);
@@ -503,6 +612,8 @@ export default function App() {
     // Recalculate
     const res = calculateInheritance(item.heirs, item.assets, lang, item.deceasedName, item.heirNames || {}, item.country, item.madhhab || 'Hanafi');
     setResult(res);
+    setEditableSummary(item.customSummary || generateLegalSummary(res, item.assets, lang, item.deceasedName));
+    setIsSummaryManuallyEdited(!!item.customSummary);
     (window as any).lastCalculationSteps = res?.steps || [];
     setActiveTab('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -575,12 +686,12 @@ export default function App() {
       element.style.boxShadow = 'none';
 
       const canvas = await html2canvas(element, { 
-        scale: 1.5, // Reduced from 2 for better memory management on mobile
+        scale: 1.5, 
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
-        scrollY: -window.scrollY, // Fix for offset issues
+        scrollY: -window.scrollY, 
         onclone: (clonedDoc) => {
           const style = clonedDoc.createElement('style');
           style.innerHTML = `
@@ -589,12 +700,21 @@ export default function App() {
               color-adjust: exact !important;
               transition: none !important;
               animation: none !important;
+              filter: none !important;
+              backdrop-filter: none !important;
+            }
+            .grayscale { 
+              filter: none !important; 
+              color: #94a3b8 !important; /* Forces slate-400 instead of grayscale filter */
+              opacity: 0.6 !important;
             }
             .text-emerald-600 { color: #059669 !important; }
             .bg-emerald-600 { background-color: #059669 !important; }
             .bg-emerald-50 { background-color: #ecfdf5 !important; }
             .text-slate-800 { color: #1e293b !important; }
             .border-emerald-500 { border-color: #10b981 !important; }
+            .bg-slate-50 { background-color: #f8fafc !important; }
+            .dark .bg-slate-900 { background-color: #0f172a !important; }
             #result-content { padding: 30px !important; width: 750px !important; height: auto !important; }
           `;
           clonedDoc.head.appendChild(style);
@@ -881,19 +1001,21 @@ export default function App() {
                 {lang === 'bn' ? 'আপনার দেশের আইন অনুযায়ী হিসাব করা হবে' : 'Calculator will be set according to your country'}
               </p>
               
-              <div className="space-y-3">
-                {[
-                  { id: 'BD', name: t.countryBD },
-                  { id: 'PK', name: t.countryPK },
-                  { id: 'SA', name: t.countrySA },
-                  { id: 'ZA', name: t.countryZA }
-                ].map((c) => (
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 no-scrollbar">
+                {COUNTRIES.map((c) => (
                   <button
-                    key={c.id}
-                    onClick={() => handleCountrySelect(c.id as any)}
+                    key={c.code}
+                    onClick={() => handleFirstTimeCountrySelect(c.code as any)}
                     className="w-full p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-between group"
                   >
-                    <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">{c.name}</span>
+                    <div className="flex flex-col items-start">
+                      <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
+                        {t[`country${c.code}` as keyof typeof t] as string || c.name.en}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                        {c.currency.name} • {c.legalStatus === 'stage1' ? 'FULL SUPPORT' : 'ADVISORY ONLY'}
+                      </span>
+                    </div>
                     <div className="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-700 group-hover:border-emerald-500 flex items-center justify-center">
                       <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -939,27 +1061,25 @@ export default function App() {
                   <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">
                     {t.selectCountry}
                   </label>
-                  <div className="space-y-2">
-                    {[
-                      { id: 'BD', name: t.countryBD },
-                      { id: 'PK', name: t.countryPK },
-                      { id: 'SA', name: t.countrySA },
-                      { id: 'ZA', name: t.countryZA }
-                    ].map((c) => (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-2 no-scrollbar">
+                    {COUNTRIES.map((c) => (
                       <button
-                        key={c.id}
+                        key={c.code}
                         onClick={() => {
-                          handleCountryChange(c.id as any);
+                          handleCountryChange(c.code as any);
                           setIsSettingsOpen(false);
                         }}
                         className={`w-full px-4 py-3 rounded-xl border-2 flex items-center justify-between transition-all ${
-                          country === c.id 
+                          country === c.code 
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400' 
                             : 'border-slate-200 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                         }`}
                       >
-                        <span className="font-bold text-sm">{c.name}</span>
-                        {country === c.id && (
+                        <div className="flex flex-col items-start">
+                          <span className="font-bold text-sm">{t[`country${c.code}` as keyof typeof t] as string || c.name.en}</span>
+                          <span className="text-[8px] font-black opacity-50 uppercase tracking-tighter">{c.legalStatus === 'stage1' ? 'Full Support' : 'Advisory'}</span>
+                        </div>
+                        {country === c.code && (
                           <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
                             <div className="w-2.5 h-2.5 bg-white rounded-full" />
                           </div>
@@ -1188,6 +1308,21 @@ export default function App() {
                           <Clock size={16} className="text-emerald-600" />
                         </div>
                         {t.prayerTimes} & {t.qibla}
+                      </button>
+
+                      <button 
+                        onClick={() => { 
+                          setConverterType('land'); 
+                          setConverterTargetField('land'); 
+                          setIsConverterOpen(true); 
+                          setIsMoreMenuOpen(false); 
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-3 rounded-xl transition-all group"
+                      >
+                        <div className="p-1 bg-emerald-50 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                          <RefreshCw size={16} className="text-emerald-600" />
+                        </div>
+                        {lang === 'bn' ? 'ইউনিট কনভার্টার' : lang === 'ar' ? 'محول الوحدات' : 'Unit Converter'}
                       </button>
 
                       <button 
@@ -1461,27 +1596,27 @@ export default function App() {
                           { 
                             key: 'land', 
                             label: t.land, 
-                            unit: country === 'SA' ? (lang === 'ar' ? 'م²' : 'm²') : (country === 'ZA' ? 'ha' : (country === 'PK' ? 'Kanal' : t.unitLand)),
+                            unit: getCountryConfig(country).landUnits[0].label,
                             canConvert: true,
                             converterType: 'land'
                           },
                           { 
                             key: 'money', 
                             label: t.money, 
-                            unit: country === 'SA' ? (lang === 'ar' ? 'ر.স' : 'SAR') : (country === 'ZA' ? 'R' : (country === 'PK' ? 'PKR' : t.unitMoney)),
+                            unit: getCountryConfig(country).currency.symbol,
                             canConvert: false
                           },
                           { 
                             key: 'gold', 
                             label: t.gold, 
-                            unit: t.unitGold,
+                            unit: getCountryConfig(country).goldUnits[0].label,
                             canConvert: true,
                             converterType: 'precious'
                           },
                           { 
                             key: 'silver', 
                             label: t.silver, 
-                            unit: t.unitSilver,
+                            unit: getCountryConfig(country).silverUnits[0].label,
                             canConvert: true,
                             converterType: 'precious'
                           }
@@ -1496,10 +1631,11 @@ export default function App() {
                                     setConverterTargetField(asset.key as 'land' | 'gold' | 'silver');
                                     setIsConverterOpen(true);
                                   }}
-                                  className="hover:scale-125 transition-transform ml-0.5"
-                                  title="Converter"
+                                  className="ml-1 p-0.5 bg-emerald-700 hover:bg-emerald-800 rounded transition-all active:scale-90 flex items-center gap-1 shadow-sm"
+                                  title="Unit Converter"
                                 >
-                                  <Scale size={12} className="text-emerald-50 group-hover:text-white transition-colors" />
+                                  <Scale size={8} className="text-emerald-100" />
+                                  <span className="text-[6px] font-black text-white px-0.5">CONV</span>
                                 </button>
                               )}
                             </label>
@@ -1671,8 +1807,106 @@ export default function App() {
               </div>
 
               <div id="result-content" className="space-y-4 bg-white dark:bg-slate-900 p-3 sm:p-8 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 transition-colors">
+                {/* Advisory Notice for Stage 2 countries */}
+                {getCountryConfig(country).legalStatus === 'stage2' && (
+                  <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex gap-4 items-start">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900/40 rounded-xl text-amber-600 dark:text-amber-400 shrink-0">
+                      <AlertCircle size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-amber-800 dark:text-amber-200 uppercase tracking-tight mb-1">{t.advisoryTitle}</h4>
+                      <p className="text-xs text-amber-700 dark:text-amber-400/90 leading-relaxed font-medium">{t.advisoryText}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recalculate Prompt */}
+                {showRecalculatePrompt && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    className="mb-6 overflow-hidden"
+                  >
+                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
+                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-200 px-2 leading-relaxed">
+                        {t.recalculatePrompt(getCountryConfig(country).name[lang], madhhab)}
+                      </p>
+                      <div className="flex gap-2 shrink-0">
+                         <button 
+                           onClick={() => setShowRecalculatePrompt(false)}
+                           className="px-4 py-2 text-[10px] font-black text-slate-500 hover:text-slate-700 uppercase tracking-widest"
+                         >
+                           {lang === 'bn' ? 'না' : 'Dismiss'}
+                         </button>
+                         <button 
+                           onClick={() => {
+                             handleCalculate();
+                             setShowRecalculatePrompt(false);
+                           }}
+                           className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all"
+                         >
+                           {lang === 'bn' ? 'হ্যাঁ, পুনরায় হিসাব করুন' : 'Recalculate Now'}
+                         </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Summary Section */}
+                <div className="mb-6 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 group/summary">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <span className="w-4 h-[2px] bg-emerald-500"></span>
+                      {t.reportSummary}
+                    </h4>
+                    <button 
+                      onClick={() => {
+                        if (result) {
+                          setEditableSummary(generateLegalSummary(result, assets, lang, deceasedName));
+                          setIsSummaryManuallyEdited(false);
+                        }
+                      }}
+                      className="opacity-0 group-hover/summary:opacity-100 transition-opacity p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg"
+                      title="Regenerate Summary"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                  </div>
+                  <textarea
+                    value={editableSummary}
+                    onChange={(e) => {
+                      setEditableSummary(e.target.value);
+                      setIsSummaryManuallyEdited(true);
+                    }}
+                    rows={4}
+                    className="w-full bg-transparent text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium italic opacity-90 resize-none outline-none focus:ring-1 focus:ring-emerald-500 rounded-lg p-2 transition-all border-none"
+                    placeholder="Type summary here..."
+                  />
+                  <div className="mt-2 flex justify-end">
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase flex items-center gap-1">
+                      <Sparkles size={10} className="text-emerald-500" />
+                      {isSummaryManuallyEdited ? 'Customized' : 'AI Generated'}
+                    </p>
+                  </div>
+                </div>
+
                 <header className="border-b-2 border-emerald-500 pb-4 mb-2 flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="text-center sm:text-left">
+                  {customLogo && (
+                    <div className="shrink-0 mb-4 sm:mb-0">
+                      <img src={customLogo} alt="Logo" className="h-16 w-auto object-contain" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+                  <div className="text-center sm:text-left flex-1">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-3">
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <Globe size={12} className="text-slate-400" />
+                        <span className="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">{t.activeCountry}: {getCountryConfig(country).name[lang]}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
+                        <Scale size={12} className="text-emerald-500" />
+                        <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">{t.activeMadhhab}: {madhhab}</span>
+                      </div>
+                    </div>
                     <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{t.reportTitle}</h3>
                     {result.deceasedName && (
                       <div className="mt-2 flex items-center justify-center sm:justify-start gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/50 w-fit mx-auto sm:mx-0">
@@ -1707,12 +1941,12 @@ export default function App() {
                             <th className="px-2 py-3 text-center">{t.relationshipHeader}</th>
                             <th className="px-2 py-3 text-center">{t.shareHeader}</th>
                             <th className="px-2 py-3 text-right">
-                              {t.landHeader} ({country === 'SA' ? (lang === 'ar' ? 'م²' : 'm²') : (country === 'ZA' ? 'ha' : (country === 'PK' ? 'Kanal' : t.unitLand))})
+                              {t.landHeader} ({getCountryConfig(country).landUnits[0].label})
                             </th>
-                            <th className="px-2 py-3 text-right">{t.goldHeader} ({t.unitGold})</th>
-                            <th className="px-2 py-3 text-right">{t.silverHeader} ({t.unitSilver})</th>
+                            <th className="px-2 py-3 text-right">{t.goldHeader} ({getCountryConfig(country).goldUnits[0].label})</th>
+                            <th className="px-2 py-3 text-right">{t.silverHeader} ({getCountryConfig(country).silverUnits[0].label})</th>
                             <th className="px-3 py-3 text-right">
-                              {t.moneyHeader} ({country === 'SA' ? (lang === 'ar' ? 'ر.স' : 'SAR') : (country === 'ZA' ? 'R' : (country === 'PK' ? 'PKR' : t.unitMoney))})
+                              {t.moneyHeader} ({getCountryConfig(country).currency.symbol})
                             </th>
                           </tr>
                         </thead>
@@ -1746,7 +1980,7 @@ export default function App() {
                                 <td className="px-2 py-3 text-right font-mono text-slate-500 dark:text-slate-400 font-medium">{row.land.toFixed(2)}</td>
                                 <td className="px-2 py-3 text-right font-mono text-slate-500 dark:text-slate-400 font-medium">{row.gold.toFixed(2)}</td>
                                 <td className="px-2 py-3 text-right font-mono text-slate-500 dark:text-slate-400 font-medium">{row.silver.toFixed(2)}</td>
-                                <td className="px-3 py-3 text-right font-mono font-black text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-800/30 transition-colors">{row.money.toLocaleString()}</td>
+                                <td className="px-3 py-3 text-right font-mono font-black text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-800/30 transition-colors">{formatCurrency(row.money)}</td>
                               </tr>
                             );
                           })}
@@ -1759,7 +1993,7 @@ export default function App() {
                             <td className="px-2 py-3 text-right text-slate-400 dark:text-slate-500">{assets.land.toFixed(2)}</td>
                             <td className="px-2 py-3 text-right text-slate-400 dark:text-slate-500">{assets.gold.toFixed(2)}</td>
                             <td className="px-2 py-3 text-right text-slate-400 dark:text-slate-500">{assets.silver.toFixed(2)}</td>
-                            <td className="px-3 py-3 text-right text-emerald-800 dark:text-emerald-200">{assets.money.toLocaleString()}</td>
+                            <td className="px-3 py-3 text-right text-emerald-800 dark:text-emerald-200">{formatCurrency(assets.money)}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -1891,7 +2125,29 @@ export default function App() {
                 </div>
                 
                 <div className="space-y-6">
-                  {INHERITANCE_RULES[lang].map((rule, idx) => (
+                  {/* National Legal Framework */}
+                  <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                         <Gavel size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">
+                          {lang === 'bn' ? 'জাতীয় আইনি কাঠামো' : (lang === 'ar' ? 'الإطار القانوني الوطني' : 'National Legal Framework')}
+                        </h4>
+                        <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                          {t[`country${country}` as keyof typeof t] as string || country}
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
+                      {getCountryConfig(country).legalFramework?.[lang] || getCountryConfig(country).legalFramework?.en}
+                    </p>
+                  </div>
+
+                  {INHERITANCE_RULES[lang as keyof typeof INHERITANCE_RULES]
+                    .filter((rule: any) => rule.countryCode === country || rule.countryCode === 'GENERAL')
+                    .map((rule: any, idx: number) => (
                     <div key={idx} className="space-y-3">
                        <h4 className="flex items-center gap-2 text-xs sm:text-sm font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
                          <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
@@ -2446,10 +2702,39 @@ export default function App() {
                 ? (country === 'SA' ? (lang === 'ar' ? 'م²' : 'm²') : (country === 'ZA' ? 'ha' : (country === 'PK' ? 'Kanal' : t.unitLand)))
                 : (converterTargetField === 'gold' ? t.unitGold : t.unitSilver)
             }
+            initialValue={assets[converterTargetField]?.toString() || ''}
             onConvert={(val) => {
               handleAssetChange(converterTargetField, val.toString());
             }}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showOnboarding && (
+          <Onboarding 
+            isDarkMode={isDarkMode} 
+            onComplete={() => {
+              localStorage.setItem('onboarding_completed', 'true');
+              setShowOnboarding(false);
+              setOnboardingSuccessMessage(lang === 'bn' ? 'হোম পেজে স্বাগতম!' : lang === 'ar' ? 'أهلاً بك في الصفحة الرئيسية!' : 'Welcome to the Home Page!');
+              setTimeout(() => setOnboardingSuccessMessage(null), 5000);
+            }} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {onboardingSuccessMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[1000] bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl shadow-emerald-500/20 flex items-center gap-3 uppercase tracking-widest text-xs"
+          >
+            <CheckCircle2 size={18} />
+            {onboardingSuccessMessage}
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -2610,6 +2895,7 @@ export default function App() {
         heirNames={heirNames}
         isDarkMode={isDarkMode}
         calculationSteps={result?.steps || []}
+        calculationResult={result}
       />
       <SpiritualTools lang={lang} isOpen={isSpiritualToolsOpen} onClose={() => setIsSpiritualToolsOpen(false)} isDarkMode={isDarkMode} />
       <UserSettings 
@@ -2646,6 +2932,7 @@ export default function App() {
         onClose={() => setIsSubscriptionModalOpen(false)}
         currentPlan={currentPlan}
         isDarkMode={isDarkMode}
+        countryCode={country}
         onUpgrade={async (plan) => {
           if (user) {
             try {

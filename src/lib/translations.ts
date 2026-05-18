@@ -44,6 +44,21 @@ export const TRANSLATIONS = {
     countryPK: "পাকিস্তান",
     countrySA: "সৌদি আরব",
     countryZA: "দক্ষিণ আফ্রিকা",
+    countryAE: "সংযুক্ত আরব আমিরাত",
+    countryMY: "মালয়েশিয়া",
+    countryID: "ইন্দোনেশিয়া",
+    countryTR: "তুরস্ক",
+    countryMA: "মরক্কো",
+    countryEG: "মিশর",
+    countryJO: "জর্ডান",
+    countryKW: "কুয়েত",
+    countryQA: "কাতার",
+    countryIN: "ভারত",
+    countryUS: "মার্কিন যুক্তরাষ্ট্র",
+    countryGB: "যুক্তরাজ্য",
+    countryCA: "কানাডা",
+    countryFR: "ফ্রান্স",
+    countryDE: "জার্মানি",
     total: "মোট",
     customHeirTitle: "কাস্টম ওয়ারিশ (বিশেষ বিবেচনা)",
     addCustom: "যুক্ত করুন",
@@ -55,6 +70,13 @@ export const TRANSLATIONS = {
     heirNamesTitle: "ওয়ারিশদের নাম লিখুন (ঐচ্ছিক)",
     errorHeirCount: "ওয়ারিশ সংখ্যা শূন্যের নিচে হতে পারে না।",
     errorAssetNegative: "সম্পদের পরিমাণ ঋণাত্মক হতে পারে না।",
+    errorAssetInvalid: "অনুগ্রহ করে সঠিক সংখ্যা প্রদান করুন।",
+    reportSummary: "প্রতিবেদনের সারসংক্ষেপ",
+    advisoryTitle: "আইনি পরামর্শ বিজ্ঞপ্তি",
+    advisoryText: "আপনার দেশে ইসলামী উত্তরাধিকার আইন সংবিধিবদ্ধ দেওয়ানি আইন নয়। এখানে প্রদত্ত হিসাবসমূহ শুধুমাত্র ব্যক্তিগত ধর্মীয় নির্দেশনার জন্য। কোনো সিদ্ধান্ত নেওয়ার আগে আপনার এলাকার আইন বিশেষজ্ঞের পরামর্শ নিন।",
+    activeCountry: "সক্রিয় দেশ",
+    activeMadhhab: "সক্রিয় মাজহাব",
+    recalculatePrompt: (country: string, madhhab: string) => `আপনি আপনার দেশ পরিবর্তন করে ${country} বেছে নিয়েছেন। ভাষা, মুদ্রা এবং এককসমূহ আপডেট করা হয়েছে। আপনার উত্তরাধিকার গণনার নিয়মাবলী ${madhhab} মাজহাব অনুযায়ী অপরিবর্তিত রয়েছে। আপনি কি পুনরায় হিসাব করতে চান?`,
     rulesHeader: "উত্তরাধিকার নীতিমালা",
     ruleTabs: {
       sa: "সৌদি আরব",
@@ -272,6 +294,21 @@ export const TRANSLATIONS = {
     countryPK: "Pakistan",
     countrySA: "Saudi Arabia",
     countryZA: "South Africa",
+    countryAE: "UAE",
+    countryMY: "Malaysia",
+    countryID: "Indonesia",
+    countryTR: "Turkey",
+    countryMA: "Morocco",
+    countryEG: "Egypt",
+    countryJO: "Jordan",
+    countryKW: "Kuwait",
+    countryQA: "Qatar",
+    countryIN: "India",
+    countryUS: "USA",
+    countryGB: "UK",
+    countryCA: "Canada",
+    countryFR: "France",
+    countryDE: "Germany",
     total: "TOTAL",
     customHeirTitle: "Custom Heirs (Special Cases)",
     addCustom: "Add New",
@@ -283,6 +320,13 @@ export const TRANSLATIONS = {
     heirNamesTitle: "Enter Heir Names (Optional)",
     errorHeirCount: "Heir count cannot be below zero.",
     errorAssetNegative: "Asset value cannot be negative.",
+    errorAssetInvalid: "Please enter a valid numeric value.",
+    reportSummary: "Report Summary",
+    advisoryTitle: "Legal Advisory Notice",
+    advisoryText: "Islamic inheritance law is not the statutory civil law in your country. The calculations provided are based on Sharia principles for personal and religious guidance only. Please consult a qualified legal professional in your jurisdiction before executing any estate distribution.",
+    activeCountry: "Active Country",
+    activeMadhhab: "Active Madhhab",
+    recalculatePrompt: (country: string, madhhab: string) => `You have changed your country to ${country}. Language, currency, and units have been updated. Your inheritance calculation rules remain based on Islamic Fara'id law under the ${madhhab} school. Would you like to recalculate?`,
     rulesHeader: "Inheritance Laws",
     ruleTabs: {
       sa: "Saudi Arabia",
@@ -500,6 +544,21 @@ export const TRANSLATIONS = {
     countryPK: "باكستان",
     countrySA: "المملكة العربية السعودية",
     countryZA: "جنوب أفريقيا",
+    countryAE: "الإمارات العربية المتحدة",
+    countryMY: "ماليزيا",
+    countryID: "إندونيسيا",
+    countryTR: "تركيا",
+    countryMA: "المغرب",
+    countryEG: "مصر",
+    countryJO: "الأردن",
+    countryKW: "الكويت",
+    countryQA: "قطر",
+    countryIN: "الهند",
+    countryUS: "الولايات المتحدة",
+    countryGB: "المملكة المتحدة",
+    countryCA: "كندا",
+    countryFR: "فرنسا",
+    countryDE: "ألمانيا",
     total: "المجموع",
     customHeirTitle: "ورثة مخصصون (حالات خاصة)",
     addCustom: "إضافة جديد",
@@ -511,6 +570,13 @@ export const TRANSLATIONS = {
     heirNamesTitle: "أدخل أسماء الورثة (اختياري)",
     errorHeirCount: "لا يمكن أن يكون عدد الورثة أقل من الصفر.",
     errorAssetNegative: "لا يمكن أن تكون قيمة الأصل سلبية.",
+    errorAssetInvalid: "يرجى إدخال قيمة عددية صالحة.",
+    reportSummary: "ملخص التقرير",
+    advisoryTitle: "تنبيه استشاري قانوني",
+    advisoryText: "قانون الميراث الإسلامي ليس القانون المدني التشريعي في بلدك. الحسابات المقدمة تستند إلى مبادئ الشريعة للإرشاد الشخصي والديني فقط. يرجى استشارة مختص قانوني مؤهل في ولايتك القضائية قبل تنفيذ أي توزيع للتركة.",
+    activeCountry: "الدولة النشطة",
+    activeMadhhab: "المذهب النشط",
+    recalculatePrompt: (country: string, madhhab: string) => `لقد قمت بتغيير بلدك إلى ${country}. تم تحديث اللغة والعملة والوحدات. تظل قواعد حساب الميراث الخاصة بك قائمة على قانون الفرائض الإسلامي وفقاً للمذهب ${madhhab}. هل ترغب في إعادة الحساب؟`,
     rulesHeader: "قوانين الميراث",
     ruleTabs: {
       sa: "السعودية",
@@ -789,6 +855,7 @@ export const HELP_CONTENT = {
 export const INHERITANCE_RULES = {
   bn: [
     {
+      countryCode: "SA",
       title: "সৌদি আরবীয় উত্তরাধিকার অবকাঠামো (শরীআহ আইন)",
       content: "সৌদি আরবে উত্তরাধিকার বিভাজন 'পার্সোনাল স্ট্যাটাস ল' (রয়্যাল ডিক্রি M/73) দ্বারা কঠোরভাবে নিয়ন্ত্রিত। এটি মূলত হাম্বলী মযহাবের শরীয়াহ আইনের ওপর ভিত্তি করে তৈরি, যা ওয়ারিশদের সুনির্দিষ্ট অংশের পাশাপাশি মৃত ব্যক্তির অন্যান্য দায়বদ্ধতাকেও গুরুত্ব দেয়।",
       points: [
@@ -802,6 +869,7 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "BD",
       title: "বাংলাদেশী মুসলিম উত্তরাধিকার আইন (হানাফী মাযহাব)",
       content: "বাংলাদেশে প্রচলিত পারিবারিক আদালত ও মুসলিম আইন অনুযায়ী মিরাস বণ্টনের মূল নীতিসমূহ নিম্নরূপ:",
       points: [
@@ -815,6 +883,7 @@ export const INHERITANCE_RULES = {
       ]
     },
      {
+      countryCode: "ZA",
       title: "দক্ষিণ আফ্রিকা উত্তরাধিকার বিধি (শরীআহ আইন)",
       content: "দক্ষিণ আফ্রিকায় মুসলিম উত্তরাধিকারীদের জন্য শরীআহ ভিত্তিক মিরাস বণ্টনের সুনির্দিষ্ট বিধান রয়েছে যা ধর্মীয় বিশ্বাস ও আইনি কাঠামোর সমন্বয়ে পরিচালিত হয়।",
       points: [
@@ -825,6 +894,7 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "PK",
       title: "পাকিস্তান উত্তরাধিকার বিধি (শরীআহ আইন)",
       content: "পাকিস্তানে উত্তরাধিকার বিভাজন মুসলিম পারিবারিক আইন অধ্যাদেশ (১৯৬১) এবং শরীআহ আইন দ্বারা পরিচালিত হয়।",
       points: [
@@ -835,6 +905,29 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "MY",
+      title: "মালয়েশিয়া উত্তরাধিকার বিধি",
+      content: "মালয়েশিয়ায় মুসলিমদের উত্তরাধিকার পৃথক রাজ্যের ইসলামিক পারিবারিক আইন এবং ফেডারেল টেরিটরি অ্যাক্ট দ্বারা পরিচালিত হয়। দেওয়ানি ও শরীয়াহ আদালতের জন্য শাফেয়ী মাযহাব হলো ডিফল্ট রেফারেন্স।",
+      points: [
+        "শাফেয়ী প্রধান রেফারেন্স: মালয়েশিয়ায় ফারায়েজ বন্টনের জন্য শাফেয়ী মাযহাব হলো আদর্শ আইনি কাঠামো।",
+        "শরীয়াহ আদালতের তত্ত্বাবধান: মুসলিমদের এস্টেট বন্টন কঠোরভাবে শরীয়াহ আদালত দ্বারা পরিচালিত হয়।",
+        "আমানাহ রায় (AmanahRaya): কোনো এক্সিকিউটর নিযুক্ত না থাকলে সরকারি ট্রাস্টি প্রায়ই মুসলিমদের এস্টেট পরিচালনা করে।",
+        "হিবা ও ওসীয়াহ: মালয়েশিয়ানরা সাধারণত শরীয়াহর সীমানার মধ্যে সম্পদ পরিকল্পনা পরিচালনা করতে হিবা (উপহার) এবং ওসীয়াহ (উইল) ব্যবহার করে।"
+      ]
+    },
+    {
+      countryCode: "AE",
+      title: "সংযুক্ত আরব আমিরাত (ইউএই) উত্তরাধিকার বিধি",
+      content: "সংযুক্ত আরব আমিরাতের ২০০৫ সালের ২৮ নম্বর ফেডারেল ডিক্রি-আইন (সংশোধিত) মুসলিম নাগরিক এবং বাসিন্দাদের জন্য উত্তরাধিকার বন্টন নিয়ন্ত্রণ করে। এখানে ফারায়েজের শরীয়াহ নীতি কঠোরভাবে প্রয়োগ করা হয়।",
+      points: [
+        "সুন্নি মাযহাবের অগ্রাধিকার: আদালত প্রধানত মালিকি মাযহাব অনুসরণ করে, যদিও মামলার ওপর ভিত্তি করে অন্যান্য সুন্নি ব্যাখ্যা বিবেচনা করা হতে পারে।",
+        "ইউনিফাইড পার্সোনাল স্ট্যাটাস কোর্ট: বিশেষায়িত আদালত দ্রুত এবং সঠিক শরীয়াহ সম্মতি নিশ্চিত করতে উত্তরাধিকার মামলা পরিচালনা করে।",
+        "এস্টেট দায়বদ্ধতা: কোনো উত্তরাধিকার বন্টন করার আগে এস্টেট থেকে ঋণ এবং দাফন খরচ পরিশোধ করতে হয়।",
+        "অ-মুসলিমদের জন্য বিকল্প: সাম্প্রতিক সংশোধনীগুলো অ-মুসলিমদের তাদের নিজ দেশের আইন বেছে নেওয়ার অনুমতি দেয়, তবে মুসলিমদের জন্য শরীয়াহ হলো ডিফল্ট এবং একমাত্র বিকল্প।"
+      ]
+    },
+    {
+      countryCode: "GENERAL",
       title: "মাজহাবগত পার্থক্য (মায়াজাহেব আরবা)",
       content: "চারজন ইমামের ইজতিহাদ ও গবেষণা অনুযায়ী বিশেষ কিছু ক্ষেত্রে বণ্টনের ভিন্নতা দেখা যায়। এই ক্যালকুলেটরটি সেই সূক্ষ্ম পাথক্যগুলো নিখুঁতভাবে গণনা করে।",
       points: [
@@ -850,6 +943,7 @@ export const INHERITANCE_RULES = {
   ],
   en: [
     {
+      countryCode: "SA",
       title: "Saudi Arabian Inheritance Framework (Sharia Law)",
       content: "Inheritance in the Kingdom of Saudi Arabia is governed by the Personal Status Law (Royal Decree M/73) of 1443H. Based on the Hanbali school of Sharia, it ensures justice by following a mandatory hierarchy of distribution and clearing estate obligations before final settlement.",
       points: [
@@ -864,6 +958,7 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "BD",
       title: "Bangladeshi Muslim Inheritance Rules (Hanafi Law)",
       content: "Inheritance in Bangladesh is governed by Islamic Sharia (Hanafi school) and specifically the Muslim Family Laws Ordinance 1961:",
       points: [
@@ -876,6 +971,7 @@ export const INHERITANCE_RULES = {
       ]
     },
      {
+      countryCode: "ZA",
       title: "South African Inheritance Rules (Sharia Law)",
       content: "Inheritance for Muslims in South Africa is guided by Sharia principles, often implemented through Sharia-compliant wills and recognized by South African legal frameworks in accordance with religious beliefs.",
       points: [
@@ -886,6 +982,7 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "PK",
       title: "Pakistan Inheritance Rules (Sharia Law)",
       content: "Inheritance in Pakistan is governed by the Muslim Family Laws Ordinance (1961) and Sharia principles, ensuring that distribution follows the Islamic legal framework recognized by the government.",
       points: [
@@ -896,6 +993,29 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "MY",
+      title: "Malaysia Inheritance Rules",
+      content: "Inheritance for Muslims in Malaysia is governed by the Islamic Family Law Enactments (individual states) and Federal Territories act. The Shafi'i school of thought is the default reference for civil and Syariah courts.",
+      points: [
+        "Shafi'i Primary Reference: The Shafi'i madhhab is the standard legal reference point for fara'id distribution in Malaysia.",
+        "Syariah Court Oversight: Distribution of estates for Muslims is strictly handled by the Syariah Courts.",
+        "AmanahRaya: The public trustee often manages estates for Muslims when no executor is appointed.",
+        "Hibah and Wasiyah: Malaysians commonly use Hibah (gift) and Wasiyah (will) to manage estate planning within Sharia boundaries."
+      ]
+    },
+    {
+      countryCode: "AE",
+      title: "UAE Inheritance Rules",
+      content: "The UAE Federal Decree-Law No. 28 of 2005 on Personal Status (as amended) governs inheritance for Muslim citizens and residents. Sharia principles of Fara'id are strictly applied.",
+      points: [
+        "Sunni Madhhab Priority: Courts predominantly follow the Maliki school, though other Sunni interpretations may be considered based on the case.",
+        "Unified Personal Status Court: Specialized courts handle inheritance cases to ensure fast and accurate Sharia compliance.",
+        "Estate Liabilities: Debts and funeral expenses must be cleared from the gross estate before any inheritance is distributed.",
+        "Non-Muslim Option: Recent amendments allow non-Muslims to opt for laws of their home country, but Sharia remains the default and only option for Muslims."
+      ]
+    },
+    {
+      countryCode: "GENERAL",
       title: "Differences Between Schools (Madhhabs)",
       content: "Islamic jurisprudence varies slightly across the four major schools (Hanafi, Maliki, Shafi'i, and Hanbali) regarding specific edge cases, particularly regarding the rights of the grandfather and full brothers.",
       points: [
@@ -909,6 +1029,7 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "SA",
       title: "Special Jurisdictional Rules",
       content: "Detailed constraints based on Saudi Ministry of Justice guidelines:",
       points: [
@@ -921,6 +1042,7 @@ export const INHERITANCE_RULES = {
   ],
   ar: [
     {
+      countryCode: "SA",
       title: "نظام الميراث الشامل في المملكة العربية السعودية",
       content: "يخضع الميراث في المملكة لنظام الأحوال الشخصية (م/73) لعام 1443هـ، المستمد من الشريعة الإسلامية وفق الراجح في المذهب الحنبلي، والذي يُطبق في دوائر التركات بمحاكم الأحوال الشخصية لضمان حقوق الورثة الشرعية والنظامية وفق تسلسل دقيق.",
       points: [
@@ -935,6 +1057,7 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "BD",
       title: "قواعد الميراث في بنغلاديش (المذهب الحنفي)",
       content: "تعتمد بنغلاديش في توزيع الميراث على أحكام المذهب الحنفي وقانون الأسرة لعام 1961:",
       points: [
@@ -947,6 +1070,29 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "ZA",
+      title: "قواعد الميراث في جنوب أفريقيا (الشريعة الإسلامية)",
+      content: "يتم توزيع الميراث للمسلمين في جنوب أفريقيا وفقاً لمبادئ الشريعة الإسلامية المعترف بها.",
+      points: [
+        "التوزيع الشرعي: يتبع التوزيع حصصاً محددة (الفرائض) كما هو مقرر في القرآن والسنة.",
+        "الدقة والامتثال: تضمن الهيئات الشرعية في جنوب أفريقيا دقة التوزيع بنسبة 100% وفقاً للفقه الإسلامي.",
+        "العملة والوحدات: تستخدم هذه الحاسبة الراند الجنوب أفريقي (ZAR) والهكتار كمعايير في الدولة.",
+        "الورثة الأساسيين: يحصل الشركاء والوالدان والأبناء على حصصهم الإلزامية أولاً."
+      ]
+    },
+    {
+      countryCode: "PK",
+      title: "قواعد الميراث في باكستان (الشريعة الإسلامية)",
+      content: "يُحكم الميراث في باكستان بموجب قانون الأحوال الشخصية للمسلمين (1961) ومبادئ الشريعة الإسلامية.",
+      points: [
+        "التوزيع الشرعي: اتباع الحصص المحددة في القرآن والسنة.",
+        "قانون 1961 (المادة 4): يرث أبناء الأبناء المتوفين حصة والديهم مباشرة، وفقاً للقانون الباكستاني.",
+        "العملة والوحدات: استخدام الروبية الباكستانية (PKR) والوحدات المحلية (قنال/مرلة).",
+        "الضمان الحكومي: تضمن الدولة دقة التوزيع بنسبة 100% وفقاً للشريعة الإسلامية."
+      ]
+    },
+    {
+      countryCode: "GENERAL",
       title: "اختلاف المذاهب الأربعة في الميراث",
       content: "تتفق المذاهب الأربعة في أصول الميراث وتختلف في بعض التفاصيل والمسائل الاجتهادية، لا سيما في علاقة الجد بالإخوة. تعامل الحاسبة هذه الفروق بدقة عالية.",
       points: [
@@ -960,12 +1106,35 @@ export const INHERITANCE_RULES = {
       ]
     },
     {
+      countryCode: "SA",
       title: "أحكام خاصة (الحمل والمفقود والخنثى)",
       content: "يراعي النظام السعودي الحالات الاستثنائية لضمان عدم ضياع الحقوق:",
       points: [
         "إرث الحمل: يُوقف للحمل أوفر النصيبين (ذكر أو أنثى) حتى يولد حياً.",
         "إرث المفقود: يوقف نصيب المفقود حتى يثبت موته حقيقة أو حكماً، أو تنقضي المدة التي يغلب في مثلها هلاكه.",
         "إرث ذوي الأرحام: لا يرث ذوو الأرحام إلا عند عدم وجود أصحاب فروض يستغرقون التركة (عدا الزوجين) وعدم وجود عصبة."
+      ]
+    },
+    {
+      countryCode: "MY",
+      title: "قواعد الميراث في ماليزيا",
+      content: "يخضع ميراث المسلمين في ماليزيا لقوانين الأحوال الشخصية الإسلامية (في كل ولاية) وقوانين الأقاليم الاتحادية. ويعتبر المذهب الشافعي هو المرجع الأساسي للمحاكم المدنية والشرعية.",
+      points: [
+        "المذهب الشافعي كمرجع أساسي: المذهب الشافعي هو المرجع القانوني القياسي لتوزيع الفرائض في ماليزيا.",
+        "رقابة المحاكم الشرعية: يتم التعامل مع توزيع تركات المسلمين حصرياً من قبل المحاكم الشرعية.",
+        "أمانة رايا (AmanahRaya): غالباً ما يتولى الوصي العام إدارة تركات المسلمين عندما لا يتم تعيين وصي.",
+        "الهبة والوصية: يستخدم الماليزيون عادةً الهبة والوصية لإدارة تخطيط التركات ضمن الحدود الشرعية."
+      ]
+    },
+    {
+      countryCode: "AE",
+      title: "قواعد الميراث في الإمارات",
+      content: "ينظم قانون الأحوال الشخصية الإماراتي (المرسوم بقانون اتحادي رقم ٢٨ لسنة ٢٠٠٥ وتعديلاته) الميراث للمواطنين والمسلمين المقيمين. وتطبق مبادئ الشريعة الإسلامية في الفرائض بصرامة.",
+      points: [
+        "أولوية المذاهب السنية: تتبع المحاكم المذهب المالكي بشكل أساسي، مع إمكانية النظر في التفسيرات السنية الأخرى حسب الحالة.",
+        "محكمة الأحوال الشخصية الموحدة: تتولى محاكم متخصصة قضايا الميراث لضمان الامتثال السريع والدقيق للشريعة.",
+        "التزامات التركة: يجب سداد الديون ونفقات الجنازة من إجمالي التركة قبل توزيع أي ميراث.",
+        "خيار غير المسلمين: تسمح التعديلات الأخيرة لغير المسلمين باختيار قوانين بلدهم الأصلي، لكن الشريعة تظل الخيار الافتراضي والوحيد للمسلمين."
       ]
     }
   ]

@@ -5,6 +5,29 @@
 
 export type Madhhab = 'Hanafi' | 'Maliki' | "Shafi'i" | 'Hanbali';
 
+export type CountryCode = 
+  | 'BD' | 'SA' | 'PK' | 'AE' | 'MY' | 'ID' | 'TR' | 'MA' | 'EG' | 'JO' | 'KW' | 'QA' // Stage 1
+  | 'IN' | 'US' | 'GB' | 'CA' | 'FR' | 'DE' | 'ZA' // Stage 2 & others
+  | 'GLOBAL';
+
+export interface CountryConfig {
+  code: CountryCode;
+  name: { bn: string; en: string; ar: string };
+  currency: { name: string; symbol: string; format: 'lakh' | 'million' };
+  landUnits: { label: string; ratio: number }[];
+  goldUnits: { label: string; ratio: number }[];
+  silverUnits: { label: string; ratio: number }[];
+  primaryLanguage: 'bn' | 'en' | 'ar' | 'tr' | 'ur' | 'ms' | 'id' | 'fr'; // Expanded to support all new countries
+  defaultMadhhab: Madhhab;
+  legalStatus: 'stage1' | 'stage2';
+  legalFramework?: { en: string; bn: string; ar: string };
+  hijriPrimary: boolean;
+  paymentMethods: string[];
+  subscriptionPrice?: {
+    pro: string;
+  };
+}
+
 export interface HeirDefinition {
   id: string;
   nameBn: string;

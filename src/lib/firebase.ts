@@ -129,11 +129,18 @@ export const getUserProfile = async (uid: string) => {
 
 export const updateUserProfile = async (uid: string, data: {
   displayName?: string;
+  name?: string;
+  address?: string;
+  email?: string;
+  mobile?: string;
+  designation?: string;
   maritalStatus?: string;
   notificationLanguage?: string;
   country?: string;
   emailNotificationsEnabled?: boolean;
   plan?: 'free' | 'pro';
+  onboardingCompleted?: boolean;
+  customLogo?: string | null;
 }) => {
   const path = `users/${uid}`;
   try {
@@ -174,6 +181,7 @@ export const saveCalculation = async (userId: string, data: {
   assets: { land: number; money: number; gold: number; silver: number };
   country: string;
   madhhab?: string;
+  customSummary?: string;
 }) => {
   const path = `users/${userId}/calculations`;
   try {

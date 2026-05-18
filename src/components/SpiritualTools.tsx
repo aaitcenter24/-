@@ -20,7 +20,10 @@ import {
   Sunset,
   CloudSun,
   Search,
-  X as CloseIcon
+  X as CloseIcon,
+  Scale,
+  ArrowRightLeft,
+  Check
 } from 'lucide-react';
 
 interface PrayerTimesData {
@@ -37,11 +40,20 @@ interface SpiritualToolsProps {
   isOpen: boolean;
   onClose: () => void;
   isDarkMode?: boolean;
+  onConvert?: (value: number, field: 'gold' | 'silver') => void;
+  currentValues?: { gold: string; silver: string };
 }
 
 const KAABA_COORDS = { lat: 21.4225, lng: 39.8262 };
 
-const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, onClose, isDarkMode }) => {
+const PRECIOUS_UNITS = [
+  { id: 'gram', labelEn: 'Gram', labelBn: 'গ্রাম', labelAr: 'جرام', ratio: 1 },
+  { id: 'vori', labelEn: 'Vori / Tola', labelBn: 'ভরি', labelAr: 'ফুরি', ratio: 11.664 },
+  { id: 'masha', labelEn: 'Masha', labelBn: 'মাশা', labelAr: 'মাশা', ratio: 0.972 },
+  { id: 'ounce', labelEn: 'Ounce (Troy)', labelBn: 'আউন্স', labelAr: 'أوقية', ratio: 31.1035 },
+];
+
+const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, onClose, isDarkMode, onConvert, currentValues }) => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [cityName, setCityName] = useState<string>('');
   const [addressInput, setAddressInput] = useState<string>('');
@@ -49,7 +61,12 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
   const [qiblaDirection, setQiblaDirection] = useState<number | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'prayer' | 'qibla'>('prayer');
+  const [view, setView] = useState<'prayer' | 'qibla' | 'converter'>('prayer');
+
+  // Converter state
+  const [convInput, setConvInput] = useState<string>('');
+  const [fromUnitId, setFromUnitId] = useState<string>('gram');
+  const [targetField, setTargetField] = useState<'gold' | 'silver'>('gold');
 
   const t = {
     title: lang === 'bn' ? 'আধ্যাত্মিক সরঞ্জাম' : lang === 'ar' ? 'الأدوات الروحية' : 'Spiritual Tools',
@@ -60,6 +77,7 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
     asr: lang === 'bn' ? 'আসর' : lang === 'ar' ? 'العصر' : 'Asr',
     maghrib: lang === 'bn' ? 'মাগরিব' : lang === 'ar' ? 'المغرب' : 'Maghrib',
     isha: lang === 'bn' ? 'এশা' : lang === 'ar' ? 'العشاء' : 'Isha',
+    converter: lang === 'bn' ? 'স্বর্ণ/রৌপ্য' : lang === 'ar' ? 'تحويل المعادن' : 'Precious Metal',
     currentLocation: lang === 'bn' ? 'বর্তমান অবস্থান' : lang === 'ar' ? 'الموقع الحالي' : 'Current Location',
     detectLocation: lang === 'bn' ? 'অবস্থান শনাক্ত করুন' : lang === 'ar' ? 'تحديد الموقع' : 'Detect Location',
     searchPlaceholder: lang === 'bn' ? 'শহর বা ঠিকানা খুঁজুন...' : lang === 'ar' ? 'ابحث عن مدينة أو عنوان...' : 'Search city or address...',
@@ -69,6 +87,12 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
     errorAPI: lang === 'bn' ? 'তথ্য আনতে সমস্যা হয়েছে' : lang === 'ar' ? 'خطأ في جلب البيانات' : 'API error',
     searchButton: lang === 'bn' ? 'খুঁজুন' : lang === 'ar' ? 'بحث' : 'Search',
     locating: lang === 'bn' ? 'অবস্থান খুঁজছি...' : lang === 'ar' ? 'جاري تحديد الموقع...' : 'Locating...',
+    convAmount: lang === 'bn' ? 'পরিমাণ লিখুন' : lang === 'ar' ? 'أدخل الكمية' : 'Amount',
+    convFrom: lang === 'bn' ? 'আপনার ইউনিট' : lang === 'ar' ? 'الوحدة الخاصة بك' : 'Your Unit',
+    convTarget: lang === 'bn' ? 'লক্ষ্য ফিল্ড' : lang === 'ar' ? 'الحقل المستهدف' : 'Target Field',
+    gold: lang === 'bn' ? 'স্বর্ণ' : lang === 'ar' ? 'ذهب' : 'Gold',
+    silver: lang === 'bn' ? 'রৌপ্য' : lang === 'ar' ? 'فضة' : 'Silver',
+    apply: lang === 'bn' ? 'হিসাবে যুক্ত করুন' : lang === 'ar' ? 'تطبيق' : 'Apply to Zakat',
   };
 
   const calculateQibla = (lat: number, lng: number) => {
@@ -212,17 +236,24 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
         <div className="flex border-b border-slate-100 dark:border-slate-800 shrink-0 transition-colors">
           <button 
             onClick={() => setView('prayer')}
-            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'prayer' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
+            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'prayer' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
           >
             <Clock size={16} />
             {t.prayerTimes}
           </button>
           <button 
             onClick={() => setView('qibla')}
-            className={`flex-1 py-4 text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'qibla' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
+            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'qibla' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
           >
             <Compass size={16} />
             {t.qibla}
+          </button>
+          <button 
+            onClick={() => setView('converter')}
+            className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${view === 'converter' ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border-b-2 border-emerald-600 dark:border-emerald-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600'}`}
+          >
+            <Scale size={16} />
+            {t.converter}
           </button>
         </div>
 
@@ -356,6 +387,117 @@ const SpiritualTools: React.FC<SpiritualToolsProps> = ({ lang, country, isOpen, 
                     {Math.round(qiblaDirection)}°
                   </p>
                 </div>
+              </motion.div>
+            ) : view === 'converter' ? (
+              <motion.div 
+                key="converter-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">{t.convAmount}</label>
+                  <div className="relative">
+                    <input 
+                      type="number"
+                      value={convInput}
+                      onChange={(e) => setConvInput(e.target.value)}
+                      placeholder="0.00"
+                      className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 rounded-2xl text-xl font-black text-slate-800 dark:text-white outline-none focus:border-emerald-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">{t.convFrom}</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PRECIOUS_UNITS.map(unit => (
+                      <button
+                        key={unit.id}
+                        onClick={() => setFromUnitId(unit.id)}
+                        className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2 ${
+                          fromUnitId === unit.id 
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' 
+                            : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:border-slate-200'
+                        }`}
+                      >
+                        {lang === 'bn' ? unit.labelBn : lang === 'ar' ? unit.labelAr : unit.labelEn}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">{t.convTarget}</label>
+                  <div className="flex gap-2">
+                    {(['gold', 'silver'] as const).map(field => (
+                      <button
+                        key={field}
+                        onClick={() => setTargetField(field)}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border-2 ${
+                          targetField === field 
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' 
+                            : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:border-slate-200'
+                        }`}
+                      >
+                        {t[field]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/50">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Converted Result</span>
+                      <span className="text-2xl font-black text-emerald-900 dark:text-white">
+                        {(() => {
+                           const val = parseFloat(convInput) || 0;
+                           const fromUnit = PRECIOUS_UNITS.find(u => u.id === fromUnitId);
+                           const gramWeight = val * (fromUnit?.ratio || 1);
+                           return gramWeight.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        })()}
+                        <span className="text-xs ml-1 opacity-50 uppercase">Gram</span>
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-800 rounded-full flex items-center justify-center text-emerald-600">
+                       <ArrowRightLeft size={18} />
+                    </div>
+                  </div>
+
+                  {onConvert && (
+                    <button 
+                      onClick={() => {
+                        const val = parseFloat(convInput) || 0;
+                        const fromUnit = PRECIOUS_UNITS.find(u => u.id === fromUnitId);
+                        const gramWeight = val * (fromUnit?.ratio || 1);
+                        onConvert(gramWeight, targetField);
+                      }}
+                      disabled={!convInput || parseFloat(convInput) <= 0}
+                      className="w-full py-4 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2 group disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                      <Check size={16} />
+                      {t.apply}
+                    </button>
+                  )}
+                </div>
+
+                {currentValues && (
+                   <div className="px-1 space-y-1">
+                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Current Weights (Grams)</p>
+                     <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                           <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">{t.gold}: {currentValues.gold}g</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                           <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase">{t.silver}: {currentValues.silver}g</span>
+                        </div>
+                     </div>
+                   </div>
+                )}
               </motion.div>
             ) : null}
           </AnimatePresence>

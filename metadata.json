@@ -1,6 +1,6 @@
 {
-  "name": "Islamic Inheritance Calculator - Sharia Distribution",
-  "description": "A comprehensive Islamic inheritance calculator supporting Sharia law across different regions, including Saudi Arabia (Hanbali) and Bangladesh. Calculate shares, assets, and export results in PDF/Image formats.",
+  "name": "Heritage Matrix - Land & Property Management",
+  "description": "A smart assistant for land and property management, featuring a comprehensive Islamic inheritance calculator, spiritual tools, and professional profile management for lawyers, surveyors, and amins.",
   "requestFramePermissions": ["geolocation"],
   "majorCapabilities": []
 }

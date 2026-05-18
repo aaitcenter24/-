@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Scale as ScaleIcon } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
-import { CalculationStep, HEIRS } from '../types';
+import { CalculationStep, HEIRS, CalculationResult } from '../types';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -31,6 +31,7 @@ interface AIInheritanceChatProps {
   heirs?: Record<string, number>;
   heirNames?: Record<string, string[]>;
   calculationSteps?: CalculationStep[];
+  calculationResult?: CalculationResult | null;
   isDarkMode?: boolean;
 }
 
@@ -45,6 +46,7 @@ const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({
   heirs,
   heirNames,
   calculationSteps = [],
+  calculationResult,
   isDarkMode
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -127,6 +129,19 @@ const AIInheritanceChat: React.FC<AIInheritanceChatProps> = ({
             count: count,
             individualNames: heirNames?.[id]?.filter(Boolean) || []
           })) : [],
+        heirShares: calculationResult?.rows.map(row => ({
+          heir: row.name,
+          individualName: row.individualName,
+          fraction: row.fraction,
+          decimalPercentage: (row.decimal * 100).toFixed(2) + '%',
+          shares: {
+            land: row.land,
+            money: row.money,
+            gold: row.gold,
+            silver: row.silver
+          },
+          note: row.note
+        })) || [],
         relevantCalculationSteps: relevantSteps.length > 0 ? relevantSteps.map(s => s.text) : calculationSteps.map(s => s.text)
       };
 

@@ -11,7 +11,7 @@ export function calculateInheritance(
   lang: 'bn' | 'en' | 'ar' = 'bn',
   deceasedName?: string,
   individualNames?: Record<string, string[]>,
-  country: 'BD' | 'PK' | 'SA' | 'ZA' = 'BD',
+  country: string = 'BD',
   madhhab: Madhhab = 'Hanafi'
 ): CalculationResult {
   const rows: ResultRow[] = [];
@@ -66,9 +66,14 @@ export function calculateInheritance(
   const excluded = new Map<string, string>();
   
   // Country Specific Logic (Saudi Arabia & South Africa)
-  if (country === 'SA' || country === 'ZA') {
+  if (country === 'SA' || country === 'ZA' || country === 'KW' || country === 'QA' || country === 'JO' || country === 'EG') {
     excluded.set('dead_son', lang === 'bn' ? 'শরীয়াহ আইনে ওছিয়ত ব্যতিত মৃত সন্তানের সন্তানরা সরাসরি ওয়ারিশ নয়' : 'Children of deceased sons do not inherit directly in Sharia Law without a specific will.');
     excluded.set('dead_daughter', lang === 'bn' ? 'শরীয়াহ আইনে ওছিয়ত ব্যতিত মৃত সন্তানের সন্তানরা সরাসরি ওয়ারিশ নয়' : 'Children of deceased daughters do not inherit directly in Sharia Law without a specific will.');
+  }
+
+  // Mandatory Bequest (Wasiat Wajibah) Note for certain countries
+  if (country === 'EG' || country === 'ID' || country === 'MA' || country === 'JO') {
+     addStep(lang === 'bn' ? 'ম্যান্ডেটরি বেকুয়েস্ট (ওয়াসিয়াত ওয়াজিবাহ) বিধি প্রযোজ্য হতে পারে।' : lang === 'ar' ? 'قد تنطبق الوصية الواجبة حسب قانون الدولة.' : 'Mandatory Bequest (Wasiat Wajibah) rules may apply for grandchildren.');
   }
 
   // Basic Exclusions
@@ -128,7 +133,10 @@ export function calculateInheritance(
   addStep(lang === 'bn' ? `${mName} মাযহাব অনুযায়ী হিসাব করা হচ্ছে।` : lang === 'ar' ? `يتم الحساب وفقاً للمذهب الـ ${mName}.` : `Calculating according to ${mName} Madhhab.`);
 
   if (country === 'BD' || country === 'PK') addStep(lang === 'bn' ? 'মুসলিম পারিবারিক আইন অধ্যাদেশ (১৯৬১) ও হানাফী ফিকহ অনুযায়ী।' : 'According to Muslim Family Laws Ordinance (1961) and Hanafi Jurisprudence.');
-  if (country === 'SA') addStep(lang === 'bn' ? 'সৌদি আরবের প্রচলিত হাম্বলী মাযহাব ও শরীয়াহ আইন অনুযায়ী।' : 'Calculating according to Hanbali law and Saudi legal frameworks.');
+  if (country === 'SA' || country === 'KW' || country === 'QA') addStep(lang === 'bn' ? 'হাম্বলী মাযহাব ও দেশীয় আইন অনুযায়ী।' : 'Calculating according to Hanbali law and local legal frameworks.');
+  if (country === 'AE' || country === 'MA') addStep(lang === 'bn' ? 'মালিকী মাযহাব ও দেশীয় আইন অনুযায়ী।' : 'Calculating according to Maliki law and local legal frameworks.');
+  if (country === 'MY' || country === 'ID') addStep(lang === 'bn' ? 'শাফিঈ মাযহাব ও দেশীয় আইন অনুযায়ী।' : 'Calculating according to Shafi\'i law and local legal frameworks.');
+  if (country === 'EG' || country === 'JO' || country === 'TR') addStep(lang === 'bn' ? 'হানাফী মাযহাব ও দেশীয় আইন অনুযায়ী।' : 'Calculating according to Hanafi law and local legal frameworks.');
   if (country === 'ZA') addStep(lang === 'bn' ? 'দক্ষিণ আফ্রিকায় প্রচলিত শরীয়াহ ভিত্তিক মুসলিম উত্তরাধিকার আইন অনুযায়ী।' : 'Calculating according to Sharia-law based Islamic inheritance rules in South Africa.');
 
   const shares: Record<string, number> = {};

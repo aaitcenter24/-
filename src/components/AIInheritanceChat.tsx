@@ -16,7 +16,7 @@ interface Message {
 }
 
 interface AIInheritanceChatProps {
-  lang: 'bn' | 'en' | 'ar';
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms';
   isOpen: boolean;
   onClose: () => void;
   deceasedName?: string;

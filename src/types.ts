@@ -5,24 +5,37 @@
 
 export type Madhhab = 'Hanafi' | 'Maliki' | "Shafi'i" | 'Hanbali';
 
-export type CountryCode = 
-  | 'BD' | 'SA' | 'PK' | 'AE' | 'MY' | 'ID' | 'TR' | 'MA' | 'EG' | 'JO' | 'KW' | 'QA' // Stage 1
-  | 'IN' | 'US' | 'GB' | 'CA' | 'FR' | 'DE' | 'ZA' // Stage 2 & others
-  | 'GLOBAL';
+export type CountryCode = string;
+
+export interface LegalFramework {
+  title: string;
+  statutorySource: string; // The primary act/ordinance code/law
+  description: string; // Exhaustive legal overview of how inheritance works in this country
+  keyPoints: string[]; // Highly detailed bullet points regarding legal execution
+  specificRules: string; // Detailed exceptions, e.g., orphaned grandchildren rights
+}
 
 export interface CountryConfig {
-  code: CountryCode;
-  name: { bn: string; en: string; ar: string };
-  currency: { name: string; symbol: string; format: 'lakh' | 'million' };
+  countryCode: string; // ISO 2-letter uppercase code
+  name: { bn: string; en: string; ar: string; ur?: string; tr?: string; id?: string; ms?: string };
+  currency: { 
+    code: string; 
+    name: string; 
+    symbol: string; 
+    format: 'lakh' | 'million';
+  };
   landUnits: { label: string; ratio: number }[];
   goldUnits: { label: string; ratio: number }[];
   silverUnits: { label: string; ratio: number }[];
-  primaryLanguage: 'bn' | 'en' | 'ar' | 'tr' | 'ur' | 'ms' | 'id' | 'fr'; // Expanded to support all new countries
+  languages: {
+    primary: string;
+    secondary: string;
+  };
   defaultMadhhab: Madhhab;
-  legalStatus: 'stage1' | 'stage2';
-  legalFramework?: { en: string; bn: string; ar: string };
-  hijriPrimary: boolean;
   paymentMethods: string[];
+  legalStatus: 'stage1' | 'stage2' | 'stage3';
+  legalFramework: LegalFramework;
+  hijriPrimary: boolean;
   subscriptionPrice?: {
     pro: string;
   };
@@ -33,6 +46,8 @@ export interface HeirDefinition {
   nameBn: string;
   nameEn: string;
   nameAr: string;
+  nameUr?: string;
+  nameMs?: string;
   category: 'sharer' | 'residuary' | 'both';
   gender: 'male' | 'female';
   group: 'immediate' | 'ancestors' | 'siblings' | 'extended';
@@ -72,14 +87,14 @@ export interface CalculationResult {
 }
 
 export const HEIRS: HeirDefinition[] = [
-  { id: 'husband', nameBn: 'স্বামী', nameEn: 'Husband', nameAr: 'زوج', category: 'sharer', gender: 'male', group: 'immediate' },
-  { id: 'wife', nameBn: 'স্ত্রী', nameEn: 'Wife', nameAr: 'زوجة', category: 'sharer', gender: 'female', group: 'immediate' },
-  { id: 'son', nameBn: 'পুত্র', nameEn: 'Son', nameAr: 'ابن', category: 'residuary', gender: 'male', group: 'immediate' },
-  { id: 'daughter', nameBn: 'কন্যা', nameEn: 'Daughter', nameAr: 'بنت', category: 'both', gender: 'female', group: 'immediate' },
+  { id: 'husband', nameBn: 'স্বামী', nameEn: 'Husband', nameAr: 'زوج', nameUr: 'شوہر', nameMs: 'Suami', category: 'sharer', gender: 'male', group: 'immediate' },
+  { id: 'wife', nameBn: 'স্ত্রী', nameEn: 'Wife', nameAr: 'زوجة', nameUr: 'بیوی', nameMs: 'Isteri', category: 'sharer', gender: 'female', group: 'immediate' },
+  { id: 'son', nameBn: 'পুত্র', nameEn: 'Son', nameAr: 'ابن', nameUr: 'بیٹا', nameMs: 'Anak Lelaki', category: 'residuary', gender: 'male', group: 'immediate' },
+  { id: 'daughter', nameBn: 'কন্যা', nameEn: 'Daughter', nameAr: 'بنت', nameUr: 'بیٹی', nameMs: 'Anak Perempuan', category: 'both', gender: 'female', group: 'immediate' },
   { id: 'dead_son', nameBn: 'মৃত পুত্র', nameEn: 'Deceased Son', nameAr: 'ابن متوفى', category: 'residuary', gender: 'male', group: 'immediate' },
   { id: 'dead_daughter', nameBn: 'মৃত কন্যা', nameEn: 'Deceased Daughter', nameAr: 'بنت متوفاة', category: 'both', gender: 'female', group: 'immediate' },
-  { id: 'father', nameBn: 'পিতা', nameEn: 'Father', nameAr: 'أب', category: 'both', gender: 'male', group: 'ancestors' },
-  { id: 'mother', nameBn: 'মাতা', nameEn: 'Mother', nameAr: 'أم', category: 'sharer', gender: 'female', group: 'ancestors' },
+  { id: 'father', nameBn: 'পিতা', nameEn: 'Father', nameAr: 'أب', nameUr: 'والد', nameMs: 'Bapa', category: 'both', gender: 'male', group: 'ancestors' },
+  { id: 'mother', nameBn: 'মাতা', nameEn: 'Mother', nameAr: 'أم', nameUr: 'والدہ', nameMs: 'Ibu', category: 'sharer', gender: 'female', group: 'ancestors' },
   { id: 'grandfather', nameBn: 'দাদা (পিতার পিতা)', nameEn: "Grandfather (Father's Father)", nameAr: 'الجد (أبو الأب)', category: 'both', gender: 'male', group: 'ancestors' },
   { id: 'grandmother_paternal', nameBn: 'দাদি (পিতার মাতা)', nameEn: "Paternal Grandmother (Father's Mother)", nameAr: 'الجدة لأب (أم الأب)', category: 'sharer', gender: 'female', group: 'ancestors' },
   { id: 'grandmother_maternal', nameBn: 'নানি (মাতার মাতা)', nameEn: "Maternal Grandmother (Mother's Mother)", nameAr: 'الجدة لأم (أم الأم)', category: 'sharer', gender: 'female', group: 'ancestors' },

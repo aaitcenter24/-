@@ -11,7 +11,7 @@ import { TRANSLATIONS } from '../lib/translations';
 import { getCountryConfig } from '../lib/countryConfig';
 
 interface SubscriptionModalProps {
-  lang: 'bn' | 'en' | 'ar';
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms';
   isOpen: boolean;
   onClose: () => void;
   currentPlan?: 'free' | 'pro';
@@ -28,7 +28,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   onUpgrade,
   countryCode
 }) => {
-  const t = TRANSLATIONS[lang].subscriptions;
+  const t = ((TRANSLATIONS as any)[lang] || TRANSLATIONS['en']).subscriptions;
   const isRtl = lang === 'ar';
   const country = getCountryConfig(countryCode);
   const proPrice = country.subscriptionPrice?.pro || t.pro.price;

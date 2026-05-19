@@ -6,13 +6,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, RefreshCw, ArrowRightLeft, Check, Scale } from 'lucide-react';
+import { getCountryConfig } from '../lib/countryConfig';
 
 interface UnitConverterProps {
   isOpen: boolean;
   onClose: () => void;
   type: 'land' | 'precious';
   onConvert?: (value: number) => void;
-  lang: 'bn' | 'en' | 'ar';
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms';
+  country: string;
   targetUnit?: string;
   initialValue?: string;
 }
@@ -30,43 +32,73 @@ const CONVERSIONS: Record<'land' | 'precious', Unit[]> = {
   land: [
     { id: 'decimal', labelEn: 'Decimal', labelBn: 'শতক', labelAr: 'عشري', ratio: 1, aliases: ['Dec', 'Satak', 'শতক', 'ডেসিমেল', 'শতাংশ', 'Shatangsho'] },
     { id: 'katha', labelEn: 'Katha', labelBn: 'কাঠা', labelAr: 'كاথা', ratio: 1.65, aliases: ['কাঠা', 'Katha'] },
-    { id: 'bigha', labelEn: 'Bigha', labelBn: 'বিঘা', labelAr: 'بيغا', ratio: 33, aliases: ['বিঘা', 'Bigha'] },
-    { id: 'acre', labelEn: 'Acre', labelBn: 'একর', labelAr: 'فدان', ratio: 100, aliases: ['একর', 'Acre'] },
+    { id: 'bigha', labelEn: 'Bigha', labelBn: 'বিঘা', labelAr: 'বিঘা', ratio: 33, aliases: ['বিঘা', 'Bigha'] },
+    { id: 'acre', labelEn: 'Acre', labelBn: 'একর', labelAr: 'একর', ratio: 100, aliases: ['একর', 'Acre'] },
     { id: 'ha', labelEn: 'Hectare', labelBn: 'হেক্টর', labelAr: 'هكتار', ratio: 247.105, aliases: ['ha', 'হেক্টর', 'Hectare'] },
     { id: 'dunam', labelEn: 'Dunam / Decare', labelBn: 'দুনাম', labelAr: 'دونم', ratio: 24.71, aliases: ['Dunam', 'Decare', 'Dönüm'] },
     { id: 'feddan', labelEn: 'Feddan', labelBn: 'ফেদান', labelAr: 'فدان', ratio: 103.8, aliases: ['Feddan', 'فدان'] },
     { id: 'qirat', labelEn: 'Qirat', labelBn: 'কিরাত', labelAr: 'قيراط', ratio: 4.325, aliases: ['Qirat', 'قيراط'] },
     { id: 'sahm', labelEn: 'Sahm', labelBn: 'সাহম', labelAr: 'سهم', ratio: 0.18, aliases: ['Sahm', 'سهم'] },
-    { id: 'kanal', labelEn: 'Kanal', labelBn: 'কানাল', labelAr: 'كانال', ratio: 12.5, aliases: ['Kanal', 'কানাল'] },
+    { id: 'kanal', labelEn: 'Kanal', labelBn: 'কানাল', labelAr: 'কানাল', ratio: 12.5, aliases: ['Kanal', 'কানাল'] },
     { id: 'marla', labelEn: 'Marla', labelBn: 'মারলা', labelAr: 'মারলা', ratio: 12.5 / 20, aliases: ['Marla', 'মারলা'] },
     { id: 'sqft', labelEn: 'Square Feet', labelBn: 'বর্গফুট', labelAr: 'قدم مربع', ratio: 1 / 435.6, aliases: ['sqft', 'sq ft', 'বর্গফুট'] },
     { id: 'sqm', labelEn: 'Square Meter', labelBn: 'বর্গমিটার', labelAr: 'متر مربع', ratio: 1 / 40.47, aliases: ['m²', 'م²', 'sqm', 'বর্গমিটার'] },
   ],
   precious: [
     { id: 'gram', labelEn: 'Gram', labelBn: 'গ্রাম', labelAr: 'جرام', ratio: 1, aliases: ['Gram', 'جرام', 'গ্রাম'] },
-    { id: 'vori', labelEn: 'Vori / Tola', labelBn: 'ভরি', labelAr: 'ফুরি', ratio: 11.664, aliases: ['Vori', 'ভরি', 'Tola', 'তোলা'] },
-    { id: 'ana', labelEn: 'Ana', labelBn: 'আনা', labelAr: 'آنا', ratio: 0.729, aliases: ['Ana', 'আনা'] },
-    { id: 'ratti', labelEn: 'Ratti', labelBn: 'রতি', labelAr: 'رتی', ratio: 0.1215, aliases: ['Ratti', 'রতি'] },
+    { id: 'vori', labelEn: 'Vori / Tola', labelBn: 'ভরি', labelAr: 'ভরি', ratio: 11.664, aliases: ['Vori', 'ভরি', 'Tola', 'তোলা'] },
+    { id: 'ana', labelEn: 'Ana', labelBn: 'আনা', labelAr: 'আনা', ratio: 0.729, aliases: ['Ana', 'আনা'] },
+    { id: 'ratti', labelEn: 'Ratti', labelBn: 'রতি', labelAr: 'রতি', ratio: 0.1215, aliases: ['Ratti', 'রতি'] },
     { id: 'masha', labelEn: 'Masha', labelBn: 'মাশা', labelAr: 'মাশা', ratio: 0.972, aliases: ['Masha', 'মাশা'] },
     { id: 'mithqal', labelEn: 'Mithqal', labelBn: 'মিদকাল', labelAr: 'مثقال', ratio: 4.25, aliases: ['Mithqal', 'مثقال'] },
     { id: 'ounce', labelEn: 'Ounce (Troy)', labelBn: 'আউন্স', labelAr: 'أوقية', ratio: 31.1035, aliases: ['Ounce', 'Oz', 'আউন্স'] },
   ]
 };
 
-const UnitConverter: React.FC<UnitConverterProps> = ({ isOpen, onClose, type, onConvert, lang, targetUnit, initialValue = '' }) => {
+const UnitConverter: React.FC<UnitConverterProps> = ({ isOpen, onClose, type, onConvert, lang, country, targetUnit, initialValue = '' }) => {
   const [inputValue, setInputValue] = useState<string>(initialValue);
-  const [selectedUnitId, setSelectedUnitId] = useState<string>(CONVERSIONS[type][0].id);
+  const [selectedUnitId, setSelectedUnitId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'convert' | 'info'>('convert');
 
-  const units = CONVERSIONS[type];
+  // Filter units based on country configuration
+  const units = useMemo(() => {
+    const config = getCountryConfig(country);
+    const sourceUnits = type === 'land' ? config.landUnits : (type === 'precious' ? config.goldUnits : config.silverUnits);
+    
+    return sourceUnits.map(u => {
+      // Find matching entry in CONVERSIONS to get localized labels
+      const match = CONVERSIONS[type === 'land' ? 'land' : 'precious'].find(c => 
+        c.labelEn?.toLowerCase() === u.label.toLowerCase() || 
+        c.aliases?.some(a => a.toLowerCase() === u.label.toLowerCase())
+      );
+      
+      return {
+        id: u.label.toLowerCase().replace(/\s+/g, '_'),
+        labelEn: u.label,
+        labelBn: match?.labelBn || u.label,
+        labelAr: match?.labelAr || u.label,
+        ratio: u.ratio,
+        aliases: match?.aliases || []
+      };
+    });
+  }, [type, country]);
+
+  // Reset selected unit when units change
+  useEffect(() => {
+    if (units.length > 0) {
+      setSelectedUnitId(units[0].id);
+    }
+  }, [units]);
 
   // Reset input when type changes or initially
   useEffect(() => {
     if (isOpen) {
       setInputValue(initialValue || '');
-      setSelectedUnitId(CONVERSIONS[type][0].id);
+      if (units.length > 0) {
+        setSelectedUnitId(units[0].id);
+      }
     }
-  }, [isOpen, type, initialValue]);
+  }, [isOpen, type, initialValue, units]);
 
   // Try to find the matching unit in the app
   const appUnit = useMemo(() => {
@@ -91,14 +123,14 @@ const UnitConverter: React.FC<UnitConverterProps> = ({ isOpen, onClose, type, on
   const applyValue = useMemo(() => baseValue / appUnit.ratio, [baseValue, appUnit.ratio]);
 
   const t = {
-    title: lang === 'bn' ? 'ইউনিট কনভার্টার' : lang === 'ar' ? 'محول الوحدات' : 'Unit Converter',
-    inputLabel: lang === 'bn' ? 'পরিমাণ লিখুন' : lang === 'ar' ? 'أدخل الكمية' : 'Enter Amount',
-    selectLabel: lang === 'bn' ? 'আপনার ইনপুট ইউনিট' : lang === 'ar' ? 'وحدة الإدخال' : 'Your Input Unit',
-    conversionsLabel: lang === 'bn' ? 'অন্যান্য ইউনিটে রূপান্তর' : lang === 'ar' ? 'التحويلات الأخرى' : 'Other Conversions',
-    apply: lang === 'bn' ? 'হিসাবে যুক্ত করুন' : lang === 'ar' ? 'تطبيق' : 'Apply to Calculation',
+    title: lang === 'bn' ? 'ইউনিট কনভার্টার' : (lang === 'ar' ? 'محول الوحدات' : (lang === 'ur' ? 'یونٹ کنورٹر' : 'Unit Converter')),
+    inputLabel: lang === 'bn' ? 'পরিমাণ লিখুন' : (lang === 'ar' ? 'أدخل الكمية' : (lang === 'ur' ? 'مقدار درج کریں' : 'Enter Amount')),
+    selectLabel: lang === 'bn' ? 'আপনার ইনপুট ইউনিট' : (lang === 'ar' ? 'وحدة الإدخال' : (lang === 'ur' ? 'آپ کا یونٹ' : 'Your Input Unit')),
+    conversionsLabel: lang === 'bn' ? 'অন্যান্য ইউনিটে রূপান্তর' : (lang === 'ar' ? 'التحويلات الأخرى' : (lang === 'ur' ? 'دیگر تبادلے' : 'Other Conversions')),
+    apply: lang === 'bn' ? 'হিসাবে যুক্ত করুন' : (lang === 'ar' ? 'تطبيق' : (lang === 'ur' ? 'حساب میں شامل کریں' : 'Apply to Calculation')),
     placeholder: '0.00',
-    targetPrefix: lang === 'bn' ? 'প্রয়োগ করা হবে:' : lang === 'ar' ? 'سيتم التطبيق:' : 'Will Apply:',
-    info: lang === 'bn' ? 'তথ্য' : lang === 'ar' ? 'معلومات' : 'Converter Info',
+    targetPrefix: lang === 'bn' ? 'প্রয়োগ করা হবে:' : (lang === 'ar' ? 'سيتم التطبيق:' : (lang === 'ur' ? 'لاگو ہوگا:' : 'Will Apply:')),
+    info: lang === 'bn' ? 'তথ্য' : (lang === 'ar' ? 'معلومات' : (lang === 'ur' ? 'معلومات' : 'Converter Info')),
   };
 
   if (!isOpen) return null;

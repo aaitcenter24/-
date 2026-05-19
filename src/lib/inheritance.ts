@@ -8,7 +8,7 @@ import { Assets, CalculationResult, HEIRS, ResultRow, Madhhab } from '../types';
 export function calculateInheritance(
   counts: Record<string, number>, 
   assets: Assets,
-  lang: 'bn' | 'en' | 'ar' = 'bn',
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms' = 'bn',
   deceasedName?: string,
   individualNames?: Record<string, string[]>,
   country: string = 'BD',
@@ -22,33 +22,42 @@ export function calculateInheritance(
   };
   
   const t = {
-    start: lang === 'bn' ? 'ইসলামী শরীয়াহ অনুযায়ী সম্পত্তির বণ্টন হিসাব করা হচ্ছে।' : lang === 'ar' ? 'يتم حساب توزيع التركة وفقاً للشريعة الإسلامية.' : 'Calculating estate distribution according to Islamic Law.',
-    excluded: (h: string, reason?: string) => lang === 'bn' ? `${h} - ${reason || 'নিকটবর্তী উত্তরাধিকারীর উপস্থিতির কারণে বঞ্চিত'}।` : lang === 'ar' ? `${h} - ${reason || 'محجوب لوجود وارث أقرب'} .` : `${h} - ${reason || 'excluded due to closer relative'}.`,
-    reason_far: lang === 'bn' ? 'নিকটতর উত্তরসূরি বিদ্যমান' : lang === 'ar' ? 'وجود وارث أقرب' : 'closer heir is alive',
-    reason_father: lang === 'bn' ? 'পিতা জীবিত' : lang === 'ar' ? 'وجود الأب' : 'father is alive',
-    reason_mother: lang === 'bn' ? 'মাতা জীবিত' : lang === 'ar' ? 'وجود الأم' : 'mother is alive',
-    reason_son: lang === 'bn' ? 'পুত্র জীবিত' : lang === 'ar' ? 'وجود الابن' : 'son is alive',
-    reason_grandfather: lang === 'bn' ? 'দাদা জীবিত' : lang === 'ar' ? 'وجود الجد' : 'grandfather is alive',
-    reason_brother: lang === 'bn' ? 'সহোদর ভাই জীবিত' : lang === 'ar' ? 'وجود الأخ الشقيق' : 'full brother is alive',
+    start: lang === 'bn' ? 'ইসলামী শরীয়াহ অনুযায়ী সম্পত্তির বণ্টন হিসাব করা হচ্ছে।' : 
+           lang === 'ar' ? 'يتم حساب توزيع التركة وفقاً للشريعة الإسلامية.' : 
+           lang === 'ur' ? 'شریعت کے مطابق وراثت کی تقسیم کا حساب لگایا جا رہا ہے۔' :
+           lang === 'ms' ? 'Pembahagian harta pusaka sedang dikira mengikut hukum Syariat.' :
+           'Calculating estate distribution according to Islamic Law.',
+    excluded: (h: string, reason?: string) => 
+           lang === 'bn' ? `${h} - ${reason || 'নিকটবর্তী উত্তরাধিকারীর উপস্থিতির কারণে বঞ্চিত'}।` : 
+           lang === 'ar' ? `${h} - ${reason || 'محجوب لوجود وارث أقرب'} .` : 
+           lang === 'ur' ? `${h} - ${reason || 'قریبی وارث کی موجودگی کی وجہ سے حصہ نہیں ملے گا'}۔` :
+           lang === 'ms' ? `${h} - ${reason || 'tidak mendapat bahagian kerana adanya waris yang lebih dekat'} .` :
+           `${h} - ${reason || 'excluded due to closer relative'}.`,
+    reason_far: lang === 'bn' ? 'নিকটতর উত্তরসূরি বিদ্যমান' : lang === 'ar' ? 'وجود وارث أقرب' : lang === 'ur' ? 'قریبی وارث موجود ہے' : lang === 'ms' ? 'waris lebih dekat ada' : 'closer heir is alive',
+    reason_father: lang === 'bn' ? 'পিতা জীবিত' : lang === 'ar' ? 'وجود الأب' : lang === 'ur' ? 'والد زندہ ہے' : lang === 'ms' ? 'bapa masih hidup' : 'father is alive',
+    reason_mother: lang === 'bn' ? 'মাতা জীবিত' : lang === 'ar' ? 'وجود الأم' : lang === 'ur' ? 'والدہ زندہ ہے' : lang === 'ms' ? 'ibu masih hidup' : 'mother is alive',
+    reason_son: lang === 'bn' ? 'পুত্র জীবিত' : lang === 'ar' ? 'وجود الابن' : lang === 'ur' ? 'بیٹا زندہ ہے' : lang === 'ms' ? 'anak lelaki masih hidup' : 'son is alive',
+    reason_grandfather: lang === 'bn' ? 'দাদা জীবিত' : lang === 'ar' ? 'وجود الجد' : lang === 'ur' ? 'دادا زندہ ہے' : lang === 'ms' ? 'datuk masih hidup' : 'grandfather is alive',
+    reason_brother: lang === 'bn' ? 'সহোদর ভাই জীবিত' : lang === 'ar' ? 'وجود الأخ الشقيق' : lang === 'ur' ? 'سگا بھائی زندہ ہے' : lang === 'ms' ? 'saudara lelaki seibu sebapa masih hidup' : 'full brother is alive',
     mushtaraka: lang === 'bn' ? 'মুশতারাকা মাসআলা: শাফিঈ ও মালিকী মাযহাব অনুযায়ী সহোদর ভাই বৈপিত্রীয় ভাইদের সাথে ১/৩ অংশে অংশীদার হয়েছেন।' : lang === 'ar' ? 'المسألة المشتركة: تشارك الأخ الشقيق مع الإخوة لأم في الثلث (مذهب الشافعية والمالكية).' : 'Mushtaraka Case: Full brother shared the 1/3 with uterine siblings (Shafi\'i/Maliki).',
     akdariya: lang === 'bn' ? 'আকদারিয়া মাসআলা: স্বামী, মাতা, দাদা ও এক সহোদর বোনের উপস্থিতিতে বিশেষ বণ্টন পদ্ধতি (মালিকী, শাফিঈ ও হাম্বলী)।' : lang === 'ar' ? 'المسألة الأكدرية: توزيع خاص للزوج والأم والجد والأخت الشقيقة (عند الجمهور).' : 'Al-Akdariya Case: Special distribution for Husband, Mother, Grandfather, and one Full Sister.',
-    aul: lang === 'bn' ? 'আউল (Aul): মোট অংশ ১-এর বেশি থাকায় সকল অংশীদারের প্রাপ্য অংশ আনুপাতিক হারে কমানো হয়েছে (পবিত্র কুরআনের মূলনীতির আলোকে)।' : lang === 'ar' ? 'العول: تجاوز مجموع السهام أصل المسألة، فتم تخفيض الأنصبة بنسبة وتناسب.' : 'Aul Rule: Total shares exceeded 1, all portions reduced proportionally according to legal principles.',
-    radd: lang === 'bn' ? 'রাদ্দ (Radd): আসাবা না থাকায় অংশীদারদের (স্বামী/স্ত্রী বাদে) অংশ আনুপাতিক হারে বাড়ানো হয়েছে (সুন্নাহর আলোকে)।' : lang === 'ar' ? 'الرد: عدم وجود عصبة، فتمت إعادة الفاضل من التركة على أصحاب الفروض (عدا الزوجين).' : 'Radd Rule: No residuaries, portions (excluding spouse) increased proportionally.',
-    asaba: lang === 'bn' ? 'অবশিষ্টাংশ আসাবা হায়ারার্কি অনুযায়ী বণ্টন করা হয়েছে (হাদিসের বর্ণনা অনুযায়ী)।' : lang === 'ar' ? 'تم توزيع الباقي وفقاً لترتيب العصبات.' : 'Remainder distributed according to Asaba hierarchy (Sunnah reference).',
-    umarayn: lang === 'bn' ? 'উমারায়ান মাসআলা (Gharrawayn): মাতা অবশিষ্ট সম্পত্তির ১/৩ অংশ পেয়েছেন (হযরত উমর রা. এর ফয়সালা)।' : lang === 'ar' ? 'المسألة العمرية: حازت الأم ثلث الباقي (قضاء سيدنا عمر رضي الله عنه).' : 'Umariyya Case: Mother received 1/3 of the remainder (Caliph Umar RA decision).',
-    husband_full: lang === 'bn' ? 'স্বামী মোট সম্পত্তির ১/২ অংশ পাবেন কারণ মৃত ব্যক্তির কোনো সন্তান নেই (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'يرث الزوج النصف لعدم وجود فرع وارث.' : 'Husband gets 1/2 as there are no children (Surah An-Nisa, 12).',
-    husband_half: lang === 'bn' ? 'স্বামী মোট সম্পত্তির ১/৪ অংশ পাবেন কারণ মৃত ব্যক্তির সন্তান রয়েছে (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'يرث الزوج الربع لوجود فرع وارث.' : 'Husband gets 1/4 as there are children (An-Nisa, 12).',
-    wife_full: lang === 'bn' ? 'স্ত্রী মোট সম্পত্তির ১/৪ অংশ পাবেন কারণ মৃত ব্যক্তির কোনো সন্তান নেই (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'ترث الزوجة الربع لعدم وجود فرع وارث.' : 'Wife gets 1/4 as there are no children (An-Nisa, 12).',
-    wife_half: lang === 'bn' ? 'স্ত্রী মোট সম্পত্তির ১/৮ অংশ পাবেন কারণ মৃত ব্যক্তির সন্তান রয়েছে (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'ترث الزوجة الثمن لوجود فرع وارث.' : 'Wife gets 1/8 as there are children (An-Nisa, 12).',
-    mother_1_6: lang === 'bn' ? 'মাতা মোট সম্পত্তির ১/৬ অংশ পাবেন কারণ মৃত ব্যক্তির সন্তান অথবা একাধিক ভাই-বোন বিদ্যমান (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث الأم السدس لوجود فرع وارث أو جمع من الإخوة.' : 'Mother gets 1/6 due to presence of children or multiple siblings (An-Nisa, 11).',
-    mother_1_3: lang === 'bn' ? 'মাতা মোট সম্পত্তির ১/৩ অংশ পাবেন কারণ মৃত ব্যক্তির কোনো সন্তান নেই এবং ভাই-বোন বড়জোড় একজন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث الأم الثلث لعدم وجود فرع وارث أو جمع من الإخوة.' : 'Mother gets 1/3 as there are no children and max one sibling (An-Nisa, 11).',
-    daughter_half: lang === 'bn' ? 'একমাত্র কন্যা হওয়ায় তিনি মোট সম্পত্তির ১/২ অংশ পাবেন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث البنت الواحدة النصف إذا انفردت ولم يكن معها من يعصبها.' : 'Single daughter gets 1/2 of the estate (An-Nisa, 11).',
-    daughters_2_3: lang === 'bn' ? 'একাধিক কন্যা হওয়ায় তারা সম্মিলিতভাবে ২/৩ অংশ পাবেন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث البنات الثلثين إذا كن اثنتين فصاعداً ولم يكن معهن من يعصبهن.' : 'Multiple daughters share 2/3 of the estate (An-Nisa, 11).',
-    son_daughter_residuary: lang === 'bn' ? 'পুত্র ও কন্যা আসাবা হিসেবে অবশিষ্ট সম্পত্তির অংশীদার হবেন, যেখানে পুত্র কন্যার দ্বিগুণ পাবেন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'يرث الأبناء والبنات بالتعصيب للذكر مثل حظ الأنثيين.' : 'Son and daughter inherit the remainder, with son getting twice as much as daughter (An-Nisa, 11).',
-    khuntha_reserved: lang === 'bn' ? 'খুনসা (উভয়লিঙ্গ) উত্তরাধিকারীর জন্য একটি সম্ভাব্য অংশ সংরক্ষিত রাখা হয়েছে।' : lang === 'ar' ? 'تم وقف نصيب احتياطي للخنثى حتى يتبين حاله.' : 'A reserved share has been set aside for the Hermaphrodite heir.',
+    aul: lang === 'bn' ? 'আউল (Aul): মোট অংশ ১-এর বেশি থাকায় সকল অংশীদারের প্রাপ্য অংশ আনুপাতিক হারে কমানো হয়েছে (পবিত্র কুরআনের মূলনীতির আলোকে)।' : lang === 'ar' ? 'العول: تجاوز مجموع السهام أصل المسألة، فتم تخفيض الأنصبة بنسبة وتناسب.' : 'Aul Rule: Total shares exceeded 1, all portions reduced proportionally.',
+    radd: lang === 'bn' ? 'রাদ্দ (Radd): আসাবা না থাকায় অংশীদারদের (স্বামী/স্ত্রী বাদে) অংশ আনুপাতিক হারে বাড়ানো হয়েছে (সুন্নাহর আলোকে)।' : lang === 'ar' ? 'الرد: عدم وجود عصبة، فتمت إعادة الفاضل من التركة على أصحاب الفروض (عدا الزوجين).' : 'Radd Rule: No residuaries, portions increased proportionally.',
+    asaba: lang === 'bn' ? 'অবশিষ্টাংশ আসাবা হায়ারার্কি অনুযায়ী বণ্টন করা হয়েছে (হাদিসের বর্ণনা অনুযায়ী)।' : lang === 'ar' ? 'تم توزيع الباقي وفقاً لترتيب العصبات.' : 'Remainder distributed according to Asaba hierarchy.',
+    umarayn: lang === 'bn' ? 'উমারায়ান মাসআলা (Gharrawayn): মাতা অবশিষ্ট সম্পত্তির ১/৩ অংশ পেয়েছেন (হযরত উমর রা. এর ফয়সালা)।' : lang === 'ar' ? 'المسألة العمرية: حازت الأم ثلث الباقي (قضاء سيدنا عمر رضي الله عنه).' : 'Umariyya Case: Mother received 1/3 of the remainder.',
+    husband_full: lang === 'bn' ? 'স্বামী মোট সম্পত্তির ১/২ অংশ পাবেন কারণ মৃত ব্যক্তির কোনো সন্তান নেই (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'يرث الزوج النصف لعدم وجود فرع وارث.' : lang === 'ur' ? 'شوہر کو نصف ملے گا کیونکہ کوئی اولاد نہیں ہے' : 'Husband gets 1/2 as there are no children.',
+    husband_half: lang === 'bn' ? 'স্বামী মোট সম্পত্তির ১/৪ অংশ পাবেন কারণ মৃত ব্যক্তির সন্তান রয়েছে (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'يرث الزوج الربع لوجود فرع وارث.' : lang === 'ur' ? 'شوہر کو چوتھائی ملے گا کیونکہ اولاد موجود ہے' : 'Husband gets 1/4 as there are children.',
+    wife_full: lang === 'bn' ? 'স্ত্রী মোট সম্পত্তির ১/৪ অংশ পাবেন কারণ মৃত ব্যক্তির কোনো সন্তান নেই (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'ترث الزوجة الربع لعدم وجود فرع وارث.' : lang === 'ur' ? 'بیوی کو چوتھائی ملے گا کیونکہ کوئی اولاد نہیں ہے' : 'Wife gets 1/4 as there are no children.',
+    wife_half: lang === 'bn' ? 'স্ত্রী মোট সম্পত্তির ১/৮ অংশ পাবেন কারণ মৃত ব্যক্তির সন্তান রয়েছে (সূরা নিসা, আয়াত-১২)।' : lang === 'ar' ? 'ترث الزوجة الثمن لوجود فرع وارث.' : lang === 'ur' ? 'بیوی کو آٹھواں حصہ ملے گا کیونکہ اولاد موجود ہے' : 'Wife gets 1/8 as there are children.',
+    mother_1_6: lang === 'bn' ? 'মাতা মোট সম্পত্তির ১/৬ অংশ পাবেন কারণ মৃত ব্যক্তির সন্তান অথবা একাধিক ভাই-বোন বিদ্যমান (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث الأم السدس لوجود فرع وارث أو جمع من الإخوة.' : 'Mother gets 1/6 due to presence of children or multiple siblings.',
+    mother_1_3: lang === 'bn' ? 'মাতা মোট সম্পত্তির ১/৩ অংশ পাবেন কারণ মৃত ব্যক্তির কোনো সন্তান নেই এবং ভাই-বোন বড়জোড় একজন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث الأم الثلث لعدم وجود فرع وارث أو جمع من الإخوة.' : 'Mother gets 1/3 as there are no children and max one sibling.',
+    daughter_half: lang === 'bn' ? 'একমাত্র কন্যা হওয়ায় তিনি মোট সম্পত্তির ১/২ অংশ পাবেন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث البنت الواحدة النصف إذا انفردت ولم يكن معها من يعصبها.' : 'Single daughter gets 1/2 of the estate.',
+    daughters_2_3: lang === 'bn' ? 'একাধিক কন্যা হওয়ায় তারা সম্মিলিতভাবে ২/৩ অংশ পাবেন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'ترث البنات الثلثين إذا كن اثنتين فصاعداً ولم يكن معهن من يعصبهن.' : 'Multiple daughters share 2/3 of the estate.',
+    son_daughter_residuary: lang === 'bn' ? 'পুত্র ও কন্যা আসাবা হিসেবে অবশিষ্ট সম্পত্তির অংশীদার হবেন, যেখানে পুত্র কন্যার দ্বিগুণ পাবেন (সূরা নিসা, আয়াত-১১)।' : lang === 'ar' ? 'يرث الأبناء والبنات بالتعصيب للذكر مثل حظ الأنثيين.' : 'Son and daughter inherit the remainder (2:1 ratio).',
+    khuntha_reserved: lang === 'bn' ? 'খুনসা (উভয়লিঙ্গ) উত্তরাধিকারীর জন্য একটি সম্ভাব্য অংশ সংরক্ষিত রাখা হয়েছে।' : lang === 'ar' ? 'تم وقف نصيب احتياطي للخنثى حتى يتبين حاله.' : 'Reserved share for Hermaphrodite heir.',
     mafqud_reserved: lang === 'bn' ? 'নিখোঁজ (মাফকুদ) উত্তরাধিকারীর জন্য তার প্রাপ্য অংশ সংরক্ষিত রাখা হয়েছে।' : lang === 'ar' ? 'تم وقف نصيب المفقود حتى يتبين حاله.' : 'Share for the missing heir (Al-Mafqud) is reserved.',
-    bayt_al_mal: lang === 'bn' ? 'কোনো বৈধ উত্তরাধিকারী না থাকায় সম্পত্তি রাষ্ট্রীয় কোষাগারে (বাইতুল মাল) জমা হবে।' : lang === 'ar' ? 'بسبب انعدام الورثة الشرعيين، تؤول التركة إلى بيت المال.' : 'No legal heirs found, the estate is transferred to the Public Treasury (Bayt al-Mal).',
-    distant_kindred: lang === 'bn' ? 'আসহাবুল ফুরুজ ও আসাবা না থাকায় অবশিষ্ট সম্পদ দূরবর্তী আত্মীয়দের (যাভিল আরহাম) মধ্যে বণ্টন করা হয়েছে।' : lang === 'ar' ? 'بسبب انعدام أصحاب الفروض والعصبات، تم توزيع التركة على ذوي الأرحام.' : 'Distributed to Distant Kindred (Dhawu al-Arham) as no fixed sharers or residuaries were found.',
+    bayt_al_mal: lang === 'bn' ? 'কোনো বৈধ উত্তরাধিকারী না থাকায় সম্পত্তি রাষ্ট্রীয় কোষাগারে (বাইতুল মাল) জমা হবে।' : lang === 'ar' ? 'بسبب انعدام الورثة الشرعيين، تؤول التركة إلى بيت المال.' : 'Estate transferred to the Public Treasury (Bayt al-Mal).',
+    distant_kindred: lang === 'bn' ? 'আসহাবুল ফুরুজ ও আসাবা না থাকায় অবশিষ্ট সম্পদ দূরবর্তী আত্মীয়দের (যাভিল আরহাম) মধ্যে বণ্টন করা হয়েছে।' : lang === 'ar' ? 'بسبب انعدام أصحاب الفروض والعصبات، تم توزيع التركة على ذوي الأرحام.' : 'Distributed to Distant Kindred (Dhawu al-Arham).',
   };
 
   const c = (id: string) => counts[id] || 0;

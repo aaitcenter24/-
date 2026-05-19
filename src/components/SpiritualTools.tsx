@@ -35,7 +35,7 @@ interface PrayerTimesData {
 }
 
 interface SpiritualToolsProps {
-  lang: 'bn' | 'en' | 'ar';
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms';
   country?: string;
   isOpen: boolean;
   onClose: () => void;

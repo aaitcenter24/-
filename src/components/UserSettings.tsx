@@ -29,10 +29,10 @@ import { TRANSLATIONS } from '../lib/translations';
 import { User as FirebaseUser } from 'firebase/auth';
 
 interface UserSettingsProps {
-  lang: 'bn' | 'en' | 'ar';
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms';
   isOpen: boolean;
   onClose: () => void;
-  onLanguageChange: (lang: 'bn' | 'en' | 'ar') => void;
+  onLanguageChange: (lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms') => void;
   currentPlan: 'free' | 'pro';
   onUpgradeClick: () => void;
   isDarkMode?: boolean;
@@ -64,7 +64,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({
   const [emailNotificationsEnabled, setEmailNotificationsEnabled] = useState(true);
   const [customLogo, setCustomLogo] = useState<string | null>(null);
 
-  const t = TRANSLATIONS[lang] as any;
+  const t = ((TRANSLATIONS as any)[lang] || TRANSLATIONS['en']) as any;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -201,7 +201,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({
                     ? 'bg-amber-400 text-amber-900 shadow-sm shadow-amber-400/20' 
                     : 'bg-slate-700 text-slate-300'
                   }`}>
-                    {currentPlan === 'pro' ? TRANSLATIONS[lang].subscriptions.pro.name : TRANSLATIONS[lang].subscriptions.free.name}
+                    {currentPlan === 'pro' ? t.subscriptions.pro.name : t.subscriptions.free.name}
                   </span>
                 </div>
                 <p className="text-slate-400 text-xs font-bold tracking-wider uppercase opacity-80">
@@ -235,7 +235,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({
                   </div>
                   <div className="space-y-2 relative z-10">
                     <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">
-                      {TRANSLATIONS[lang].subscriptions.title}
+                      {t.subscriptions.title}
                     </h3>
                     <p className="text-xl font-black text-white uppercase tracking-tight leading-none">
                       {currentPlan === 'pro' 
@@ -256,7 +256,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({
                       }}
                       className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-600 text-amber-950 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all relative z-10"
                     >
-                      {TRANSLATIONS[lang].subscriptions.pro.get}
+                      {t.subscriptions.pro.get}
                     </button>
                   )}
                 </div>
@@ -473,8 +473,8 @@ const UserSettings: React.FC<UserSettingsProps> = ({
                         {(t as any).preferredLang}
                       </label>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['bn', 'en', 'ar'] as const).map((l) => (
+                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                      {(['bn', 'en', 'ar', 'ur', 'ms'] as const).map((l) => (
                         <button
                           key={l}
                           onClick={() => {
@@ -487,7 +487,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({
                               : 'border-white dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-600 text-slate-500 dark:text-slate-400'
                           }`}
                         >
-                          {l === 'bn' ? 'বাংলা' : l === 'en' ? 'English' : 'العربية'}
+                          {l === 'bn' ? 'বাংলা' : l === 'en' ? 'English' : l === 'ar' ? 'العربية' : l === 'ur' ? 'اردو' : 'Melayu'}
                         </button>
                       ))}
                     </div>

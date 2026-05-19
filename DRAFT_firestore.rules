@@ -74,9 +74,5 @@ service cloud.firestore {
         && incoming().createdAt == existing().createdAt;
       allow delete: if isOwner(existing().userId);
     }
-
-    match /feedback/{feedbackId} {
-      allow create: if isSignedIn();
-    }
   }
 }

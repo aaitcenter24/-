@@ -11,12 +11,12 @@ import { TRANSLATIONS } from '../lib/translations';
 interface PrivacyPolicyProps {
   isOpen: boolean;
   onClose: () => void;
-  lang: 'bn' | 'en' | 'ar';
+  lang: 'bn' | 'en' | 'ar' | 'ur' | 'ms';
   isDarkMode?: boolean;
 }
 
 const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ isOpen, onClose, lang }) => {
-  const t = (TRANSLATIONS[lang] as any).privacyPolicy;
+  const t = ((TRANSLATIONS as any)[lang] || (TRANSLATIONS as any).en).privacyPolicy;
 
   if (!isOpen) return null;
 

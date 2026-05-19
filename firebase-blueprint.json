@@ -1,76 +1,77 @@
 {
   "entities": {
-    "UserProfile": {
-      "title": "User Profile",
-      "description": "Public and private information about a user",
+    "User": {
+      "title": "User",
+      "description": "User profile information",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
         "displayName": { "type": "string" },
-        "email": { "type": "string" },
         "photoURL": { "type": "string" },
-        "country": { "type": "string" },
-        "name": { "type": "string" },
-        "address": { "type": "string" },
-        "mobile": { "type": "string" },
-        "designation": { "type": "string" },
-        "onboardingCompleted": { "type": "boolean" },
-        "maritalStatus": { "type": "string" },
-        "notificationLanguage": { "type": "string" },
-        "emailNotificationsEnabled": { "type": "boolean" },
-        "customLogo": { "type": "string", "description": "Base64 encoded custom logo for reports" },
-        "plan": { "type": "string", "enum": ["free", "pro"] },
-        "lastLogin": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["uid", "email"]
+      "required": ["uid", "email", "createdAt", "updatedAt"]
     },
-    "CalculationEntry": {
-      "title": "Saved Calculation",
-      "description": "A saved inheritance calculation",
+    "Calculation": {
+      "title": "Calculation",
+      "description": "Saved inheritance calculation",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
+        "userId": { "type": "string" },
         "deceasedName": { "type": "string" },
-        "heirs": { 
-          "type": "object",
-          "description": "Count of each heir type, e.g., { 'son': 2, 'wife': 1 }"
-        },
-        "assets": { 
-          "type": "object",
-          "description": "Asset amounts, e.g., { 'land': 10, 'money': 5000 }"
-        },
-        "country": { "type": "string" },
+        "countryCode": { "type": "string" },
         "madhhab": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "assets": {
+          "type": "object",
+          "properties": {
+            "land": { "type": "number" },
+            "money": { "type": "number" },
+            "gold": { "type": "number" },
+            "silver": { "type": "number" }
+          }
+        },
+        "selectedHeirs": {
+          "type": "object",
+          "description": "Map of heirId to count"
+        },
+        "result": {
+          "type": "object",
+          "description": "The computed CalculationResult"
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["heirs", "assets", "country", "timestamp"]
+      "required": ["userId", "countryCode", "assets", "selectedHeirs", "result", "createdAt", "updatedAt"]
     },
     "Feedback": {
-      "title": "User Feedback",
-      "description": "User reported discrepancies or suggestions",
+      "title": "Feedback",
+      "description": "User feedback",
       "type": "object",
       "properties": {
         "uid": { "type": "string" },
         "email": { "type": "string" },
-        "type": { "type": "string", "enum": ["discrepancy", "suggestion", "other"] },
+        "type": { "type": "string" },
         "message": { "type": "string" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["uid", "type", "message", "timestamp"]
+      "required": ["uid", "type", "message", "createdAt"]
     }
   },
   "firestore": {
     "/users/{userId}": {
-      "schema": "UserProfile",
-      "description": "User profiles"
+      "schema": "User",
+      "description": "User profile document"
     },
-    "/users/{userId}/calculations/{calculationId}": {
-      "schema": "CalculationEntry",
-      "description": "Saved inheritance calculations"
+    "/calculations/{calculationId}": {
+      "schema": "Calculation",
+      "description": "Stored calculations"
     },
     "/feedback/{feedbackId}": {
       "schema": "Feedback",
-      "description": "Collection of user feedback"
+      "description": "User feedback submissions"
     }
   }
 }

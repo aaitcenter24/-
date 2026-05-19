@@ -76,7 +76,11 @@ export const TRANSLATIONS = {
     advisoryText: "আপনার দেশে ইসলামী উত্তরাধিকার আইন সংবিধিবদ্ধ দেওয়ানি আইন নয়। এখানে প্রদত্ত হিসাবসমূহ শুধুমাত্র ব্যক্তিগত ধর্মীয় নির্দেশনার জন্য। কোনো সিদ্ধান্ত নেওয়ার আগে আপনার এলাকার আইন বিশেষজ্ঞের পরামর্শ নিন।",
     activeCountry: "সক্রিয় দেশ",
     activeMadhhab: "সক্রিয় মাজহাব",
-    recalculatePrompt: (country: string, madhhab: string) => `আপনি আপনার দেশ পরিবর্তন করে ${country} বেছে নিয়েছেন। ভাষা, মুদ্রা এবং এককসমূহ আপডেট করা হয়েছে। আপনার উত্তরাধিকার গণনার নিয়মাবলী ${madhhab} মাজহাব অনুযায়ী অপরিবর্তিত রয়েছে। আপনি কি পুনরায় হিসাব করতে চান?`,
+    recalculatePrompt: (country: string, madhhab: string, langName: string, currency: string) => `আপনি আপনার দেশ পরিবর্তন করে ${country} বেছে নিয়েছেন।\nভাষা: ${langName} | মুদ্রা: ${currency} | মাজহাব: ${madhhab} (ডিফল্ট)\nসব হিসাব, একক, আইনি রেফারেন্স এবং ভাষা আপডেট করা হয়েছে। আপনি কি আপনার বর্তমান উত্তরাধিকার সমস্যাটি নতুন দেশের সেটিংসের সাথে পুনরায় হিসাব করতে চান?`,
+    yes: "হ্যাঁ",
+    no: "না",
+    recalculateNow: "হ্যাঁ, পুনরায় হিসাব করুন",
+    dismiss: "বাতিল",
     rulesHeader: "উত্তরাধিকার নীতিমালা",
     ruleTabs: {
       sa: "সৌদি আরব",
@@ -326,7 +330,11 @@ export const TRANSLATIONS = {
     advisoryText: "Islamic inheritance law is not the statutory civil law in your country. The calculations provided are based on Sharia principles for personal and religious guidance only. Please consult a qualified legal professional in your jurisdiction before executing any estate distribution.",
     activeCountry: "Active Country",
     activeMadhhab: "Active Madhhab",
-    recalculatePrompt: (country: string, madhhab: string) => `You have changed your country to ${country}. Language, currency, and units have been updated. Your inheritance calculation rules remain based on Islamic Fara'id law under the ${madhhab} school. Would you like to recalculate?`,
+    recalculatePrompt: (country: string, madhhab: string, langName: string, currency: string) => `You have changed your country to ${country}.\nLanguage: ${langName} | Currency: ${currency} | Madhhab: ${madhhab} (default)\nAll calculations, units, legal references, and language have been updated. Would you like to recalculate your current inheritance case with the new country settings?`,
+    yes: "Yes",
+    no: "No",
+    recalculateNow: "Recalculate Now",
+    dismiss: "Dismiss",
     rulesHeader: "Inheritance Laws",
     ruleTabs: {
       sa: "Saudi Arabia",
@@ -576,7 +584,11 @@ export const TRANSLATIONS = {
     advisoryText: "قانون الميراث الإسلامي ليس القانون المدني التشريعي في بلدك. الحسابات المقدمة تستند إلى مبادئ الشريعة للإرشاد الشخصي والديني فقط. يرجى استشارة مختص قانوني مؤهل في ولايتك القضائية قبل تنفيذ أي توزيع للتركة.",
     activeCountry: "الدولة النشطة",
     activeMadhhab: "المذهب النشط",
-    recalculatePrompt: (country: string, madhhab: string) => `لقد قمت بتغيير بلدك إلى ${country}. تم تحديث اللغة والعملة والوحدات. تظل قواعد حساب الميراث الخاصة بك قائمة على قانون الفرائض الإسلامي وفقاً للمذهب ${madhhab}. هل ترغب في إعادة الحساب؟`,
+    recalculatePrompt: (country: string, madhhab: string, langName: string, currency: string) => `لقد قمت بتغيير بلدك إلى ${country}.\nاللغة: ${langName} | العملة: ${currency} | المذهب: ${madhhab} (افتراضي)\nتم تحديث جميع الحسابات والوحدات والمراجع القانونية واللغة. هل ترغب في إعادة حساب حالة الميراث الحالية الخاصة بك مع إعدادات البلد الجديدة؟`,
+    yes: "نعم",
+    no: "لا",
+    recalculateNow: "إعادة الحساب الآن",
+    dismiss: "تجاهل",
     rulesHeader: "قوانين الميراث",
     ruleTabs: {
       sa: "السعودية",
@@ -753,6 +765,262 @@ export const TRANSLATIONS = {
       },
       backToApp: "العودة للتطبيق"
     }
+  },
+  ur: {
+    appName: "وراثت کا کیلکولیٹر",
+    calculate: "حساب کریں",
+    rules: "قواعد",
+    faq: "سوال و جواب",
+    selectHeirs: "وارثوں کا انتخاب",
+    assets: "اثاثے",
+    land: "زمین",
+    money: "رقم",
+    gold: "سونا",
+    silver: "چاندی",
+    unitLand: "رقم",
+    unitMoney: "₨",
+    unitGold: "تولہ",
+    unitSilver: "تولہ",
+    reset: "دوبارہ شروع",
+    calculateButton: "حساب لگائیں",
+    back: "واپس",
+    download: "ڈاؤن لوڈ",
+    reportTitle: "تقسیمِ وراثت کی رپورٹ",
+    heirsCount: "وارثوں کی تعداد",
+    calculationCorrect: "حساب درست ہے",
+    summaryTitle: "خلاصہ تقسیم",
+    stepsTitle: "حساب کے مراحل",
+    detailsTitle: "تفصیلی رپورٹ",
+    heirHeader: "وارث",
+    shareHeader: "حصہ",
+    landHeader: "زمین",
+    goldHeader: "سونا",
+    silverHeader: "چاندی",
+    moneyHeader: "رقم",
+    relationshipHeader: "رشتہ",
+    relOfDeceased: (h: string) => `مرحوم کا ${h}`,
+    sortByName: "نام کے مطابق ترتیب دیں",
+    settings: "ترتیبات",
+    selectCountry: "ملک منتخب کریں",
+    activeCountry: "فعال ملک",
+    activeMadhhab: "فعال مذہب",
+    total: "کل",
+    recalculateNow: "ابھی دوبارہ حساب کریں",
+    dismiss: "خارج کریں",
+    advisoryTitle: "قانونی نوٹس",
+    advisoryText: "یہ حسابات صرف مذہبی رہنمائی کے لیے ہیں۔ قانونی فیصلے سے پہلے کسی ماہرِ قانون سے مشورہ کریں۔",
+    rulesHeader: "وراثت کے اصول",
+    ruleTabs: {
+      sa: "سعودی عرب",
+      bd: "بنگلہ دیش",
+      za: "جنوبی افریقہ",
+      pk: "پاکستان",
+      schools: "فقہی مذاہب"
+    },
+    faqHeader: "اکثر پوچھے گئے سوالات",
+    footerTitle: "Inheritance Matrix",
+    footerCopy: "© 2026 • AI Logic",
+    groups: {
+      immediate: "قریبی خاندان",
+      ancestors: "آباؤ اجداد",
+      siblings: "بہن بھائی",
+      extended: "دیگر وارث"
+    },
+    recalculatePrompt: (country: string, madhhab: string, langName: string, currency: string) => `آپ نے اپنا ملک تبدیل کر کے ${country} منتخب کیا ہے۔\nزبان: ${langName} | کرنسی: ${currency} | مذہب: ${madhhab}\nکیا آپ نئے ملک کی ترتیبات کے ساتھ دوبارہ حساب کرنا چاہتے ہیں؟`,
+    yes: "جی ہاں",
+    no: "جی نہیں",
+    errorHeirCount: "وارثوں کی تعداد منفی نہیں ہو سکتی۔",
+    errorAssetNegative: "اثاثوں کی مقدار منفی نہیں ہو سکتی۔",
+    errorAssetInvalid: "براہ کرم درست نمبر درج کریں۔",
+    reportSummary: "رپورٹ کا خلاصہ",
+    madhhab: "مذہب",
+    share: "شیئر",
+    copied: "کاپی ہو گیا",
+    history: "تاریخچہ",
+    help: "مدد",
+    feedback: "رائے",
+    deceasedNameLabel: "مرحوم کا نام",
+    deceasedNamePlaceholder: "مرحوم کا نام درج کریں (اختیاری)",
+    heirNamePlaceholder: "وارث کا نام",
+    heirNamesTitle: "وارثوں کے نام درج کریں (اختیاری)",
+    unknownDeceased: "نامعلوم مرحوم",
+    loadDetails: "تفصیلات لوڈ کریں",
+    savedCalculations: "محفوظ کردہ حسابات",
+    loginToViewHistory: "تاریخچہ دیکھنے کے لیے لاگ ان کریں",
+    noSavedCalculations: "کوئی محفوظ حساب نہیں ملا",
+    submit: "ارسال کریں",
+    feedbackSuccess: "رائے بھیجنے کا شکریہ",
+    feedbackError: "خرابی پیش آگئی",
+    shareText: "وراثت کی تقسیم کا حساب",
+    prayerTimes: "نماز کے اوقات",
+    qibla: "قبلہ",
+    confirmSaveTitle: "محفوظ کریں",
+    confirmSaveDesc: "کیا آپ اس حساب کو محفوظ کرنا چاہتے ہیں؟",
+    confirmSaveButton: "محفوظ کریں",
+    confirmCancelButton: "کینسل",
+    planLimitTitle: "حد ختم",
+    planLimitDesc: "آپ کی مفت حد ختم ہو چکی ہے۔",
+    casesTitle: "خاص مسائل",
+    tour: {
+      next: "اگلا",
+      prev: "پیچھے",
+      done: "مکمل",
+      welcomeTitle: "خوش آمدید",
+      welcomeDesc: "وراثت کے کیلکولیٹر میں خوش آمدید۔",
+      deceasedTitle: "مرحوم کی معلومات",
+      deceasedDesc: "مرحوم کا نام اور کُل اثاثے درج کریں۔",
+      heirsTitle: "وارثوں کا انتخاب",
+      heirsDesc: "وارثوں کا انتخاب کریں",
+      assetsTitle: "اثاثے",
+      assetsDesc: "اثاثوں کی تفصیلات",
+      aiTitle: "اے آئی رپورٹ",
+      aiDesc: "اے آئی سے تیار کردہ رپورٹ",
+      langTitle: "زبان",
+      langDesc: "زبان تبدیل کریں",
+      moreTitle: "مزید",
+      moreDesc: "مزید اختیارات"
+    },
+    privacyPolicy: {
+      title: "رازداری کی پالیسی",
+      lastUpdated: "آخری اپ ڈیٹ: 13 مئی 2026",
+      intro: "ہیریٹیج میٹرکس میں آپ کی رازداری ہمارے لیے اہم ہے۔",
+      dataCollection: { title: "ڈیٹا جمع کرنا", desc: "ہم آپ کی معلومات کو محفوظ طریقے سے جمع کرتے ہیں۔" },
+      firebase: { title: "سیکورٹی", desc: "ہم گوگل فائر بیس استعمال کرتے ہیں۔" },
+      usage: { title: "استعمال", desc: "آپ کا ڈیٹا فروخت نہیں کیا جاتا۔" },
+      dataRetention: { title: "رکھنا اور حذف کرنا", desc: "آپ کسی بھی وقت ڈیٹا حذف کر سکتے ہیں۔" },
+      thirdParty: { title: "تیسرا فریق", desc: "ہم معلومات شیئر نہیں کرتے۔" },
+      childPrivacy: { title: "بچوں کی رازداری", desc: "یہ ایپ بچوں کے لیے نہیں ہے۔" },
+      userRights: { title: "آپ کے حقوق", desc: "آپ کو اپنے ڈیٹا تک رسائی کا حق ہے۔" },
+      contact: { title: "رابطہ", desc: "ہم سے رابطہ کریں: aaitcenter24@gmail.com" },
+      control: { title: "کنٹرول", desc: "آپ اپنی ترتیبات خود کنٹرول کر سکتے ہیں۔" },
+      commitment: "ہماری رازداری کی پالیسی آپ کے لیے وقف ہے۔",
+      close: "بند کریں",
+      share: "شیئر کریں",
+      shareBody: "پالیسی دیکھیں: "
+    },
+    subscriptions: {
+      title: "سبسکرپشن پیکجز",
+      choosePlan: "اپنے لیے بہترین پلان کا انتخاب کریں",
+      free: { name: "مفت", price: "0 روپے / مہینہ", features: ["3 محفوظ حسابات", "بنیادی رپورٹ", "ایمیج ڈاؤن لوڈ", "کمیونٹی سپورٹ"], current: "موجودہ پلان", get: "شروع کریں" },
+      pro: { name: "پرو", price: "100 روپے / مہینہ", features: ["لامحدود حسابات", "پی ڈی ایف ڈاؤن لوڈ", "اے آئی اسسٹنٹ", "بغیر اشتہارات", "ترجیحی سپورٹ"], current: "فعال ہو گیا", get: "پرو پر اپ گریڈ کریں" },
+      backToApp: "ایپ پر واپس"
+    }
+  },
+  ms: {
+    appName: "Kalkulator Warisan",
+    calculate: "Kira",
+    rules: "Syarat",
+    faq: "Soalan Lazim",
+    selectHeirs: "Pilih Waris",
+    assets: "Harta",
+    land: "Tanah",
+    money: "Wang",
+    gold: "Emas",
+    silver: "Perak",
+    unitLand: "unit",
+    unitMoney: "RM",
+    unitGold: "Gram",
+    unitSilver: "Gram",
+    reset: "Set semula",
+    calculateButton: "Kira Sekarang",
+    back: "Kembali",
+    download: "Muat turun",
+    reportTitle: "Laporan Pembahagian Harta",
+    heirsCount: "Bilangan Waris",
+    calculationCorrect: "Kiraan Betul",
+    summaryTitle: "Ringkasan Pembahagian",
+    stepsTitle: "Langkah Pengiraan",
+    detailsTitle: "Pecahan Terperinci",
+    heirHeader: "Waris",
+    shareHeader: "Bahagian",
+    landHeader: "Tanah",
+    goldHeader: "Emas",
+    silverHeader: "Perak",
+    moneyHeader: "Wang",
+    relationshipHeader: "Hubungan",
+    relOfDeceased: (h: string) => `${h} Si Mati`,
+    sortByName: "Susun mengikut Nama",
+    settings: "Tetapan",
+    selectCountry: "Pilih Negara",
+    activeCountry: "Negara Aktif",
+    activeMadhhab: "Mazhab Aktif",
+    total: "Jumlah",
+    recalculateNow: "Kira Semula Sekarang",
+    dismiss: "Batal",
+    advisoryTitle: "Nasihat Undang-undang",
+    advisoryText: "Pengiraan ini adalah untuk panduan agama sahaja. Sila rujuk pakar undang-undang tempatan sebelum membuat keputusan.",
+    rulesHeader: "Garis Panduan Pewarisan",
+    ruleTabs: {
+      sa: "Arab Saudi",
+      bd: "Bangladesh",
+      za: "Afrika Selatan",
+      pk: "Pakistan",
+      schools: "Mazhab"
+    },
+    faqHeader: "Soalan Lazim",
+    footerTitle: "Inheritance Matrix",
+    footerCopy: "© 2026 • AI Logic",
+    groups: {
+      immediate: "Keluarga Terdekat",
+      ancestors: "Nenek Moyang",
+      siblings: "Adik Beradik",
+      extended: "Keluarga Besar"
+    },
+    recalculatePrompt: (country: string, madhhab: string, langName: string, currency: string) => `Anda telah menukar negara ke ${country}.\nBahasa: ${langName} | Mata Wang: ${currency} | Mazhab: ${madhhab}\nAdakah anda ingin mengira semula kes pewarisan semasa anda dengan tetapan negara baharu?`,
+    yes: "Ya",
+    no: "Tidak",
+    errorHeirCount: "Bilangan waris tidak boleh negatif.",
+    errorAssetNegative: "Jumlah harta tidak boleh negatif.",
+    errorAssetInvalid: "Sila masukkan nombor yang sah.",
+    reportSummary: "Ringkasan Laporan",
+    madhhab: "Mazhab",
+    share: "Kongsi",
+    copied: "Disalin",
+    history: "Sejarah",
+    help: "Bantuan",
+    feedback: "Maklum Balas",
+    privacyPolicy: "Dasar Privasi",
+    deceasedNameLabel: "Nama Si Mati",
+    deceasedNamePlaceholder: "Masukkan nama si mati (pilihan)",
+    heirNamePlaceholder: "Nama Waris",
+    heirNamesTitle: "Masukkan Nama Waris (pilihan)",
+    unknownDeceased: "Si Mati Tanpa Nama",
+    loadDetails: "Muat Butiran",
+    savedCalculations: "Kiraan Disimpan",
+    loginToViewHistory: "Log masuk untuk lihat sejarah",
+    noSavedCalculations: "Tiada kiraan disimpan",
+    submit: "Hantar",
+    feedbackSuccess: "Terima kasih atas maklum balas",
+    feedbackError: "Ralat berlaku",
+    shareText: "Kiraan Pembahagian Warisan",
+    prayerTimes: "Waktu Solat",
+    qibla: "Kiblat",
+    confirmSaveTitle: "Simpan",
+    confirmSaveDesc: "Adakah anda ingin menyimpan kiraan ini?",
+    confirmSaveButton: "Simpan",
+    confirmCancelButton: "Batal",
+    planLimitTitle: "Had Dicapai",
+    planLimitDesc: "Had percuma anda telah dicapai.",
+    casesTitle: "Kes Khas",
+    tour: {
+      next: "Seterusnya",
+      prev: "Sebelumnya",
+      done: "Selesai",
+      welcomeTitle: "Selamat Datang",
+      welcomeDesc: "Selamat datang ke Kalkulator Warisan.",
+      deceasedTitle: "Maklumat Si Mati",
+      deceasedDesc: "Masukkan nama si mati dan jumlah harta.",
+      heirsTitle: "Pilih Waris",
+      heirsDesc: "Pilih waris yang berkenaan.",
+      assetsTitle: "Harta",
+      assetsDesc: "Butiran harta pusaka.",
+      aiTitle: "Laporan AI",
+      aiDesc: "Laporan rumusan AI.",
+      langTitle: "Bahasa",
+      langDesc: "Tukar bahasa.",
+      moreTitle: "Lagi",
+      moreDesc: "Lagi pilihan."
+    }
   }
 };
 
@@ -848,6 +1116,68 @@ export const HELP_CONTENT = {
       { name: "المعاذة", text: "إستراتيجية يعدّ فيها الأشقاءُ الإخوةَ لأب على الجد لنقص حظه بالمقাসمة، ثم يحجب الأشقاء الإخوة لأب." },
       { name: "المسألة المشركة", text: "حالة (زوج، أم، إخوة لأم، وأخ شقيق) حيث يشارك الأخ الشقيق الإخوة لأم في ثلثهم عند الشافعية والمالكية." },
       { name: "المسألة العمريّة (الغراوين)", text: "المسألة التي تنحصر في أب وأم وأحد الزوجين، وتأخذ فيها الأم ثلث الباقي." }
+    ]
+  },
+  ur: {
+    steps: [
+      { title: "1. مرحوم کی معلومات", text: "مرحوم کا نام (اختیاری) اور چھوڑی ہوئی نقد رقم، زمین، سونا اور چاندی کی تفصیلات درج کریں۔" },
+      { title: "2. وارثوں کا انتخاب", text: "بٹن یا کی بورڈ کا استعمال کرتے ہوئے قریبی رشتہ داروں (شریک حیات، والدین اور اولاد) اور بہن بھائیوں کی تعداد درج کریں۔" },
+      { title: "3. ملک کا انتخاب", text: "ترتیبات سے اپنا ملک منتخب کریں۔ ملک کے مطابق قوانین، کرنسی اور اکائیاں اپ ڈیٹ ہو جائیں گی۔" },
+      { title: "4. نتیجہ اور رپورٹ", text: "'حساب کریں' پر کلک کریں تاکہ تقسیم دیکھی جا سکے۔ آپ رپورٹ کو PDF یا امیج کے طور پر ڈاؤن لوڈ کر سکتے ہیں۔" }
+    ],
+    fields: [
+      { name: "زمین", desc: "پاکستان میں 'کنال/مرلہ' اور دیگر علاقوں میں م² یا ہیکٹر کے طور پر ناپی جاتی ہے۔" },
+      { name: "نقد اثاثے", desc: "تدفین کے اخراجات اور قرضوں کی ادائیگی کے بعد بچنے والی کُل رقم درج کریں۔" },
+      { name: "سونا اور چاندی", desc: "مرحوم کے سونا اور چاندی کے کُل وزن (تولہ/گرام) کی تفصیل۔" }
+    ],
+    theory: [
+      { title: "اصحاب الفروض", desc: "وہ وارث جن کے حصے قرآن و سنت میں طے شدہ ہیں۔ جیسے: شوہر، بیوی، والدین۔ مجموعی طور پر ایسے 12 قریبی رشتہ دار ہیں۔" },
+      { title: "عصبات", desc: "وہ رشتہ دار جو اصحاب الفروض کے حصے دینے کے بعد بچا ہوا مال وصول کرتے ہیں۔ جیسے: بیٹا، باپ، بھائی۔ بیٹا ہونے کی صورت میں بیٹیاں 2:1 کے تناسب سے شریک ہوتی ہیں۔" },
+      { title: "عول", desc: "ایک ریاضیاتی طریقہ جب حصوں کا مجموعہ 1 سے بڑھ جائے۔ تمام حصوں کو متناسب طور پر کم کر دیا جاتا ہے۔" },
+      { title: "رد", desc: "عول کا الٹ؛ جب اصحاب الفروض کے بعد مال بچ جائے اور کوئی عصبہ نہ ہو، تو بچا ہوا مال (شوہر/بیوی کے علاوہ) وارثوں کو واپس مل جاتا ہے۔" },
+      { title: "حجب", desc: "وہ اصول جس میں قریبی رشتہ دار دور کے رشتہ داروں کو حصے سے محروم کر دیتے ہیں۔ مثلاً: باپ کی موجودگی میں دادا محروم ہو جاتا ہے۔" }
+    ],
+    madhhabs: [
+      { name: "فقہ حنفی", desc: "برصغیر پاک و ہند میں سب سے زیادہ رائج۔ اس میں دادا کی موجودگی میں بہن بھائی محروم ہو جاتے ہیں۔" },
+      { name: "شافعی اور مالکی", desc: "جنوب مشرقی ایشیا اور افریقہ میں رائج۔ یہ دادا کے ساتھ بہن بھائیوں کی شرکت (مقاسمہ) کو تسلیم کرتے ہیں۔" },
+      { name: "فقہ حنبلی", desc: "سعودی عرب میں سرکاری طور پر رائج۔ یہ بھی دادا کے ساتھ بہن بھائیوں کی شرکت کی حمایت کرتا ہے۔" }
+    ],
+    cases: [
+      { name: "الاکدریہ", desc: "شوہر، ماں، دادا اور ایک بہن کی موجودگی کا خاص مسئلہ۔ اس میں بہن کا حصہ دادا کے ساتھ ملا کر دوبارہ سے طے کیا جاتا ہے۔" },
+      { name: "المعادہ", desc: "دادا کے ساتھ بہن بھائیوں کی تقسیم کا طریقہ۔" },
+      { name: "المشرکہ", desc: "وہ مسئلہ جہاں سگے بھائیوں کو ماں جائے بھائیوں کے ساتھ ثلث (1/3) حصے میں شریک کیا جاتا ہے۔" },
+      { name: "عمریتین", desc: "صرف شوہر/بیوی اور والدین کی موجودگی میں ماں کو 'باقی ماندہ' کا 1/3 دیا جاتا ہے۔" }
+    ]
+  },
+  ms: {
+    steps: [
+      { title: "1. Maklumat Si Mati", text: "Mulakan dengan memasukkan nama si mati (pilihan) serta jumlah tunai, tanah, emas, dan perak yang ditinggalkan." },
+      { title: "2. Pilih Waris", text: "Masukkan bilangan waris yang masih hidup menggunakan butang untuk Waris Dekat, Datuk/Nenek, dan Adik Beradik." },
+      { title: "3. Pilih Negara", text: "Pergi ke tetapan untuk memilih negara anda. Logik pengiraan, mata wang, dan unit akan dikemas kini mengikut negara." },
+      { title: "4. Keputusan & Laporan", text: "Klik 'Kira Sekarang' untuk melihat pembahagian. Anda boleh memuat turun laporan sebagai PDF atau imej." }
+    ],
+    fields: [
+      { name: "Tanah", desc: "Diukur dalam unit m² untuk Arab Saudi atau hektar untuk Afrika Selatan mengikut konfigurasi negara." },
+      { name: "Aset Tunai", desc: "Masukkan jumlah tunai bersih selepas ditolak belanja pengebumian dan penyelesaian hutang." },
+      { name: "Emas & Perak", desc: "Jumlah berat pegangan emas dan perak si mati dalam unit gram atau mengikut tetapan." }
+    ],
+    theory: [
+      { title: "Ashabul Furud", desc: "Waris yang bahagiannya ditentukan secara tetap dalam Al-Quran (cth: Suami, Isteri, Ibu, Bapa). Terdapat 12 kategori waris utama." },
+      { title: "Asabah", desc: "Waris yang menerima baki harta selepas bahagian Ashabul Furud dipenuhi (cth: Anak Lelaki, Bapa, Saudara Lelaki)." },
+      { title: "Aul", desc: "Pelarasan matematik apabila jumlah bahagian melebihi 1. Semua bahagian akan dikurangkan secara berkadar." },
+      { title: "Radd", desc: "Kebalikan daripada Aul; apabila terdapat baki selepas Ashabul Furud dan tiada asabah, baki dipulangkan kepada waris (kecuali pasangan)." },
+      { title: "Hajb", desc: "Prinsip di mana waris lebih dekat menghalang waris lebih jauh daripada menerima harta (cth: Bapa menghalang Datuk)." }
+    ],
+    madhhabs: [
+      { name: "Mazhab Hanafi", desc: "Sangat biasa di Asia Selatan. Dalam mazhab ini, datuk menghalang semua saudara lelaki dan perempuan." },
+      { name: "Mazhab Syafi'i & Maliki", desc: "Dominan di Malaysia dan Asia Tenggara. Datuk berkongsi harta dengan adik-beradik (Muqasama)." },
+      { name: "Mazhab Hanbali", desc: "Rasmi di Arab Saudi. Menyokong perkongsian datuk dengan adik-beradik tetapi menolak kes Mushtaraka tertentu." }
+    ],
+    cases: [
+      { name: "Al-Akdariya", desc: "Kes unik melibatkan Suami, Ibu, Datuk, dan Saudara Perempuan di mana pengiraan khas digunakan." },
+      { name: "Al-Ma'adda", desc: "Strategi di mana saudara kandung 'mengira' saudara sebapa untuk mengurangkan bahagian datuk." },
+      { name: "Kes Mushtaraka", desc: "Di mana saudara kandung dibenarkan berkongsi bahagian 1/3 dengan saudara seibu." },
+      { name: "Kes Umariya", desc: "Kes melibatkan hanya pasangan dan ibu bapa di mana ibu menerima 1/3 daripada baki." }
     ]
   }
 };
@@ -1137,6 +1467,52 @@ export const INHERITANCE_RULES = {
         "خيار غير المسلمين: تسمح التعديلات الأخيرة لغير المسلمين باختيار قوانين بلدهم الأصلي، لكن الشريعة تظل الخيار الافتراضي والوحيد للمسلمين."
       ]
     }
+  ],
+  ur: [
+    {
+      countryCode: "PK",
+      title: "پاکستانی وراثت کے اصول (قانونِ شریعہ)",
+      content: "پاکستان میں وراثت کی تقسیم مسلم فیملی لاء آرڈیننس (1961) اور شریعت کے اصولوں کے تحت ہوتی ہے۔",
+      points: [
+        "شریعت کے مطابق تقسیم: قرآن و سنت میں طے شدہ حصوں (فرائض) کے مطابق۔",
+        "1961 کا آرڈیننس (دفعہ 4): فوت شدہ بیٹے یا بیٹی کی اولاد اپنے والدین کا حصہ پانے کی حقدار ہے (پاکستانی قانون کے مطابق)۔",
+        "کرنسی اور اکائیاں: اس کیلکولیٹر میں پاکستانی روپیہ (PKR) اور مقامی اکائیاں (کنال/مرلہ) استعمال کی گئی ہیں۔",
+        "حکومتی ضمانت: ریاست اس بات کو یقینی بناتی ہے کہ تقسیم اسلامی قانون کے مطابق 100% درست ہو۔"
+      ]
+    },
+    {
+      countryCode: "GENERAL",
+      title: "فقہی مذاہب کے درمیان فرق",
+      content: "چاروں بڑے فقہی مذاہب (حنفی، مالکی، شافعی، اور حنبلی) کے درمیان کچھ مخصوص مسائل میں معمولی فرق پایا جاتا ہے۔",
+      points: [
+        "دادا بمقابلہ بہن بھائی: فقہ حنفی میں دادا کی موجودگی میں بہن بھائی محروم ہو جاتے ہیں۔ دیگر تین مذاہب میں دادا بہن بھائیوں کے ساتھ حصہ بانٹتا ہے (مقاسمہ)۔",
+        "المشرکہ: یہ مسئلہ اس وقت پیدا ہوتا ہے جب شوہر، ماں، ماں جائے بہن بھائی اور سگے بھائی موجود ہوں۔ شافعی اور مالکی مذاہب سگے بھائیوں کو ماں جائے بھائیوں کے ساتھ شریک کرتے ہیں۔",
+        "العول اور الرد: حصوں کی ریاضیاتی ایڈجسٹمنٹ جب ان کا مجموعہ 1 سے زیادہ یا کم ہو جائے۔"
+      ]
+    }
+  ],
+  ms: [
+    {
+      countryCode: "MY",
+      title: "Garis Panduan Pewarisan Malaysia",
+      content: "Pewarisan bagi orang Islam di Malaysia ditadbir oleh Enakmen Undang-undang Keluarga Islam (negeri-negeri) dan Akta Wilayah Persekutuan. Mazhab Syafi'i adalah rujukan utama bagi mahkamah sivil dan Syariah.",
+      points: [
+        "Rujukan Utama Syafi'i: Mazhab Syafi'i adalah titik rujukan undang-undang standard bagi pembahagian fara'id di Malaysia.",
+        "Penyeliaan Mahkamah Syariah: Pembahagian harta pusaka orang Islam dikendalikan sepenuhnya oleh Mahkamah Syariah.",
+        "AmanahRaya: Pemegang amanah awam sering menguruskan harta jika tiada wasi yang dilantik.",
+        "Hibah dan Wasiat: Rakyat Malaysia biasa menggunakan Hibah (pemberian) dan Wasiat untuk merancang harta mengikut syarak."
+      ]
+    },
+    {
+      countryCode: "GENERAL",
+      title: "Perbezaan Antara Mazhab",
+      content: "Jurisprudensi Islam berbeza sedikit di antara empat mazhab utama (Hanafi, Maliki, Syafi'i, dan Hanbali) mengenai kes tertentu.",
+      points: [
+        "Datuk vs Adik-Beradik: Dalam mazhab Hanafi, datuk menghalang semua adik-beradik. Dalam tiga mazhab lain, datuk berkongsi harta dengan adik-beradik (Muqasama).",
+        "Kes Mushtaraka: Berlaku apabila saudara kandung berkongsi bahagian 1/3 dengan saudara seibu (diterima dalam Mazhab Syafi'i & Maliki).",
+        "Aul dan Radd: Pelarasan matematik apabila jumlah bahagian tidak menyamai 1."
+      ]
+    }
   ]
 };
 
@@ -1178,5 +1554,17 @@ export const FAQ_DATA = {
     { q: "هل يرث الولد من الزنا من أبيه؟", a: "لا، الولد من الزنا لا ينسب لأبيه ولا يرث منه، بل ينسب لأمه ويرث منها ومن قرابتها." },
     { q: "ما هي المسألة المشركة؟", a: "هي مسألة (زوج، وأم، وإخوة لأم، وأخ شقيق) حيث يشرك الشافعية والمالكية الأخ الشقيق مع الإخوة لأم في نصيبهم (الثلث)، بينما يسقط الأخ الشقيق عند الحنفية والحنابلة." },
     { q: "هل الجد يحجب الإخوة دائماً؟", a: "عند الحنفية نعم، الجد يحجب جميع الإخوة كالأب. أما عند الجمهور (المالكية والشافعية والحنابلة) فالجد لا يحجب الإخوة الأشقاء أو لأب بل يقاسمهم الميراث." }
+  ],
+  ur: [
+    { q: "وراثت کی تقسیم کب شروع ہوتی ہے؟", a: "وراثت کی تقسیم تدفین کے اخراجات اور مرحوم کے تمام قرضوں کی ادائیگی کے بعد شروع ہوتی ہے۔" },
+    { q: "کیا غیر مسلم رشتہ دار وارث ہو سکتے ہیں؟", a: "نامور فقہاء کے مطابق، مسلمانوں اور غیر مسلموں کے درمیان وراثت کا تبادلہ نہیں ہوتا۔" },
+    { q: "عصبہ سے کیا مراد ہے؟", a: "عصبہ وہ وارث ہیں جن کا حصہ طے شدہ نہیں ہوتا، بلکہ وہ بچا ہوا مال وصول کرتے ہیں۔" },
+    { q: "دواسطہ وارث کون ہوتے ہیں؟", a: "اگر بیٹا موجود ہو تو وہ پوتے کو محروم کر دیتا ہے۔ اسی طرح باپ دادا کو محروم کر دیتا ہے۔" }
+  ],
+  ms: [
+    { q: "Bilakah harta pusaka dibahagikan?", a: "Harta dibahagikan selepas belanja pengebumian, penyelesaian hutang, dan pelaksanaan wasiat (maksimum 1/3 harta)." },
+    { q: "Bolehkah bukan Islam mewarisi harta?", a: "Mengikut hukum syarak, tiada pewarisan antara Muslim dan bukan Muslim." },
+    { q: "Apa itu Asabah?", a: "Asabah adalah waris yang menerima baki harta setelah waris Ashabul Furud menerima bahagian tetap mereka." },
+    { q: "Apakah maksud Hajb?", a: "Hajb bermaksud pendinding, di mana waris lebih dekat menghalang waris lebih jauh daripada mendapat bahagian." }
   ]
 };

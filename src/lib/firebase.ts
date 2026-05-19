@@ -1,29 +1,36 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
+import { 
+  getAuth, 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  signOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
 import { 
   getFirestore, 
   doc, 
-  getDocFromServer, 
   getDoc, 
+  getDocs, 
   setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
   serverTimestamp,
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  deleteDoc,
-  Timestamp
+  getDocFromServer,
+  addDoc
 } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
+import { handleFirestoreError, OperationType } from './firebaseUtils';
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
 
-// Test connection
+// Connectivity check as per skill requirements
 async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
@@ -33,209 +40,125 @@ async function testConnection() {
     }
   }
 }
-testConnection();
 
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
+if (typeof window !== 'undefined') {
+  testConnection();
 }
 
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-    providerInfo?: {
-      providerId?: string | null;
-      email?: string | null;
-    }[];
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
-export const syncUserProfile = async (user: any, selectedCountry?: string) => {
-  const userPath = `users/${user.uid}`;
+// Auth functions
+export const loginWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
   try {
-    const userRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userRef);
+    const result = await signInWithPopup(auth, provider);
+    return result.user;
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
+  }
+};
 
+export const logout = () => signOut(auth);
+
+// User Profile functions
+export const syncUserProfile = async (user: FirebaseUser, countryCode?: string) => {
+  const userDocRef = doc(db, 'users', user.uid);
+  try {
+    const userDoc = await getDoc(userDocRef);
     if (!userDoc.exists()) {
-      // New user, must have country
-      if (!selectedCountry) return null;
       const profile = {
         uid: user.uid,
         email: user.email,
         displayName: user.displayName,
         photoURL: user.photoURL,
-        country: selectedCountry,
+        country: countryCode || null,
         plan: 'free',
-        lastLogin: serverTimestamp(),
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
-      await setDoc(userRef, profile);
+      await setDoc(userDocRef, profile);
       return profile;
     } else {
-      // Existing user
-      const existingData = userDoc.data();
-      const updateData: any = { lastLogin: serverTimestamp() };
-      if (selectedCountry) updateData.country = selectedCountry;
-      await setDoc(userRef, updateData, { merge: true });
-      return { ...existingData, ...updateData };
+      if (countryCode) {
+        await updateDoc(userDocRef, { 
+          country: countryCode,
+          updatedAt: serverTimestamp()
+        });
+      }
+      return userDoc.data();
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, userPath);
+    handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
   }
 };
 
 export const getUserProfile = async (uid: string) => {
-  const path = `users/${uid}`;
   try {
-    const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
+    const userDoc = await getDoc(doc(db, 'users', uid));
     return userDoc.exists() ? userDoc.data() : null;
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET, path);
+    handleFirestoreError(error, OperationType.GET, `users/${uid}`);
   }
 };
 
-export const updateUserProfile = async (uid: string, data: {
-  displayName?: string;
-  name?: string;
-  address?: string;
-  email?: string;
-  mobile?: string;
-  designation?: string;
-  maritalStatus?: string;
-  notificationLanguage?: string;
-  country?: string;
-  emailNotificationsEnabled?: boolean;
-  plan?: 'free' | 'pro';
-  onboardingCompleted?: boolean;
-  customLogo?: string | null;
-}) => {
-  const path = `users/${uid}`;
+export const updateUserProfile = async (uid: string, updates: any) => {
   try {
-    const userRef = doc(db, 'users', uid);
-    await setDoc(userRef, {
-      ...data,
+    await updateDoc(doc(db, 'users', uid), {
+      ...updates,
       updatedAt: serverTimestamp()
-    }, { merge: true });
-    return true;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, path);
-  }
-};
-
-export const loginWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    console.error("Login failed:", error);
-    throw error;
-  }
-};
-
-export const logout = async () => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error("Logout failed:", error);
-    throw error;
-  }
-};
-
-export const saveCalculation = async (userId: string, data: {
-  deceasedName?: string;
-  heirs: Record<string, number>;
-  heirNames?: Record<string, string[]>;
-  assets: { land: number; money: number; gold: number; silver: number };
-  country: string;
-  madhhab?: string;
-  customSummary?: string;
-}) => {
-  const path = `users/${userId}/calculations`;
-  try {
-    const calcRef = collection(db, 'users', userId, 'calculations');
-    const docRef = await addDoc(calcRef, {
-      ...data,
-      timestamp: serverTimestamp()
-    });
-    return docRef.id;
-  } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, path);
-  }
-};
-
-export const getCalculations = async (userId: string) => {
-  const path = `users/${userId}/calculations`;
-  try {
-    const calcRef = collection(db, 'users', userId, 'calculations');
-    const q = query(calcRef, orderBy('timestamp', 'desc'));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      timestamp: (doc.data().timestamp as Timestamp)?.toDate()
-    }));
-  } catch (error) {
-    handleFirestoreError(error, OperationType.LIST, path);
-  }
-};
-
-export const deleteCalculation = async (userId: string, calculationId: string) => {
-  const path = `users/${userId}/calculations/${calculationId}`;
-  try {
-    const docRef = doc(db, 'users', userId, 'calculations', calculationId);
-    await deleteDoc(docRef);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, path);
-  }
-};
-
-export const submitFeedback = async (data: {
-  uid: string;
-  email?: string;
-  type: 'discrepancy' | 'suggestion' | 'other';
-  message: string;
-}) => {
-  const path = 'feedback';
-  try {
-    const feedbackRef = collection(db, 'feedback');
-    await addDoc(feedbackRef, {
-      ...data,
-      timestamp: serverTimestamp()
     });
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, path);
+    handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+  }
+};
+
+// Calculation functions
+export const saveCalculation = async (uid: string, data: any) => {
+  const calculationsRef = collection(db, 'calculations');
+  try {
+    const newDoc = doc(calculationsRef);
+    await setDoc(newDoc, {
+      ...data,
+      userId: uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return newDoc.id;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'calculations');
+  }
+};
+
+export const getCalculations = async (uid: string) => {
+  const calculationsRef = collection(db, 'calculations');
+  const q = query(
+    calculationsRef, 
+    where('userId', '==', uid), 
+    orderBy('createdAt', 'desc')
+  );
+  try {
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, 'calculations');
+  }
+};
+
+export const deleteCalculation = async (uid: string, id: string) => {
+  try {
+    await deleteDoc(doc(db, 'calculations', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `calculations/${id}`);
+  }
+};
+
+// Feedback
+export const submitFeedback = async (feedback: any) => {
+  try {
+    await addDoc(collection(db, 'feedback'), {
+      ...feedback,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, 'feedback');
   }
 };

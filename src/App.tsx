@@ -98,15 +98,17 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'];
 
 export default function App() {
-  const [lang, setLang] = useState<'bn' | 'en' | 'ar'>(() => {
+  const [lang, setLang] = useState<'bn' | 'en' | 'ar' | 'ur' | 'ms'>(() => {
     const saved = localStorage.getItem('appLang');
-    if (saved === 'bn' || saved === 'en' || saved === 'ar') return saved;
+    if (saved === 'bn' || saved === 'en' || saved === 'ar' || saved === 'ur' || saved === 'ms') return saved;
     
     // Auto-detect browser language
     const browserLang = navigator.language.toLowerCase();
     if (browserLang.startsWith('bn')) return 'bn';
     if (browserLang.startsWith('ar')) return 'ar';
-    return 'en'; // Default to en for detection if not bn or ar
+    if (browserLang.startsWith('ur')) return 'ur';
+    if (browserLang.startsWith('ms')) return 'ms';
+    return 'en'; // Default to en for detection if not bn or ar or ur or ms
   });
 
   const [showLanguageWelcome, setShowLanguageWelcome] = useState(() => {
@@ -119,7 +121,7 @@ export default function App() {
 
   const [onboardingSuccessMessage, setOnboardingSuccessMessage] = useState<string | null>(null);
 
-  const handleConfirmLanguage = (selectedLang: 'bn' | 'en' | 'ar') => {
+  const handleConfirmLanguage = (selectedLang: 'bn' | 'en' | 'ar' | 'ur' | 'ms') => {
     setLang(selectedLang);
     localStorage.setItem('appLang', selectedLang);
     localStorage.setItem('hasSeenLanguageWelcome', 'true');
@@ -194,11 +196,12 @@ export default function App() {
   const [converterType, setConverterType] = useState<'land' | 'precious'>('land');
   const [converterTargetField, setConverterTargetField] = useState<'land' | 'gold' | 'silver'>('land');
   
-  const t = TRANSLATIONS[lang];
+  const t = (TRANSLATIONS[lang as keyof typeof TRANSLATIONS] || TRANSLATIONS.en) as any;
 
   // Initialize and run tour
   const startTour = () => {
-    const tTour = TRANSLATIONS[lang].tour;
+    const tCurrent = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+    const tTour = tCurrent.tour;
     const driverObj = driver({
       showProgress: true,
       animate: true,
@@ -324,29 +327,23 @@ export default function App() {
       'US': 'USD'
     };
 
-    const currencyCode = currencyMap[config.code] || 'USD';
+    const currencyCode = currencyMap[config.countryCode] || 'USD';
+    const fractionDigits = config.countryCode === 'KW' ? 3 : 0;
+    const locale = config.countryCode === 'BD' ? 'en-IN' : 'en-US';
 
-    if (config.currency.format === 'lakh') {
-      return new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: currencyCode,
-        currencyDisplay: 'narrowSymbol',
-        maximumFractionDigits: 0
-      }).format(value).replace('BDT', '৳').replace('PKR', '₨');
-    }
-
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: currencyCode,
       currencyDisplay: 'narrowSymbol',
-      maximumFractionDigits: 0
-    }).format(value);
+      maximumFractionDigits: fractionDigits,
+      minimumFractionDigits: fractionDigits
+    }).format(value).replace('BDT', '৳').replace('PKR', '₨');
   };
 
   const handleCountryChange = async (newCountry: CountryCode) => {
     const config = getCountryConfig(newCountry);
     setCountry(newCountry);
-    setLang(config.primaryLanguage as any);
+    setLang(config.languages.primary as any);
     setMadhhab(config.defaultMadhhab);
 
     if (user) {
@@ -391,7 +388,7 @@ export default function App() {
           decoded.m || 'Hanafi'
         );
         setResult(res);
-        setEditableSummary(generateLegalSummary(res, decoded.a || { land: 0, money: 0, gold: 0, silver: 0 }, decoded.l || 'en', decoded.n || ''));
+        setEditableSummary(generateLegalSummary(res, decoded.a || { land: 0, money: 0, gold: 0, silver: 0 }, decoded.l || 'en', decoded.n || '', country));
         setIsSummaryManuallyEdited(false);
         setActiveTab('result');
         
@@ -434,28 +431,18 @@ export default function App() {
   };
 
   const toggleLang = () => {
+    const config = getCountryConfig(country);
     setLang(prev => {
-      let next: 'bn' | 'en' | 'ar' = prev;
-      if (country === 'BD') {
-        next = prev === 'bn' ? 'en' : 'bn';
-      } else if (country === 'SA') {
-        next = prev === 'ar' ? 'en' : 'ar';
-      } else if (country === 'ZA') {
-        // South Africa defaults to English, maybe add Afrikaans later if needed
-        next = 'en';
-      } else {
-        // Fallback for PK or others
-        next = prev === 'en' ? 'bn' : 'en';
-      }
+      const next = prev === config.languages.primary ? config.languages.secondary : config.languages.primary;
       
       if (result) {
-        const res = calculateInheritance(counts, assets, next, deceasedName, heirNames, country, madhhab);
+        const res = calculateInheritance(counts, assets, next as any, deceasedName, heirNames, country, madhhab);
         setResult(res);
         if (!isSummaryManuallyEdited) {
-          setEditableSummary(generateLegalSummary(res, assets, next, deceasedName));
+          setEditableSummary(generateLegalSummary(res, assets, next as any, deceasedName, country));
         }
       }
-      return next;
+      return next as any;
     });
   };
 
@@ -530,7 +517,7 @@ export default function App() {
   const handleCalculate = () => {
     const res = calculateInheritance(counts, assets, lang, deceasedName, heirNames, country, madhhab);
     setResult(res);
-    setEditableSummary(generateLegalSummary(res, assets, lang, deceasedName));
+    setEditableSummary(generateLegalSummary(res, assets, lang, deceasedName, country));
     setIsSummaryManuallyEdited(false);
     (window as any).lastCalculationSteps = res?.steps || [];
     setActiveTab('result');
@@ -612,7 +599,7 @@ export default function App() {
     // Recalculate
     const res = calculateInheritance(item.heirs, item.assets, lang, item.deceasedName, item.heirNames || {}, item.country, item.madhhab || 'Hanafi');
     setResult(res);
-    setEditableSummary(item.customSummary || generateLegalSummary(res, item.assets, lang, item.deceasedName));
+    setEditableSummary(item.customSummary || generateLegalSummary(res, item.assets, lang, item.deceasedName, country));
     setIsSummaryManuallyEdited(!!item.customSummary);
     (window as any).lastCalculationSteps = res?.steps || [];
     setActiveTab('result');
@@ -1004,13 +991,13 @@ export default function App() {
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2 no-scrollbar">
                 {COUNTRIES.map((c) => (
                   <button
-                    key={c.code}
-                    onClick={() => handleFirstTimeCountrySelect(c.code as any)}
+                    key={c.countryCode}
+                    onClick={() => handleFirstTimeCountrySelect(c.countryCode as any)}
                     className="w-full p-4 rounded-2xl border-2 border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all flex items-center justify-between group"
                   >
                     <div className="flex flex-col items-start">
                       <span className="font-black text-slate-700 dark:text-slate-300 uppercase tracking-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
-                        {t[`country${c.code}` as keyof typeof t] as string || c.name.en}
+                        {t[`country${c.countryCode}` as keyof typeof t] as string || c.name.en}
                       </span>
                       <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                         {c.currency.name} • {c.legalStatus === 'stage1' ? 'FULL SUPPORT' : 'ADVISORY ONLY'}
@@ -1064,22 +1051,22 @@ export default function App() {
                   <div className="space-y-2 max-h-60 overflow-y-auto pr-2 no-scrollbar">
                     {COUNTRIES.map((c) => (
                       <button
-                        key={c.code}
+                        key={c.countryCode}
                         onClick={() => {
-                          handleCountryChange(c.code as any);
+                          handleCountryChange(c.countryCode as any);
                           setIsSettingsOpen(false);
                         }}
                         className={`w-full px-4 py-3 rounded-xl border-2 flex items-center justify-between transition-all ${
-                          country === c.code 
+                          country === c.countryCode 
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400' 
                             : 'border-slate-200 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         <div className="flex flex-col items-start">
-                          <span className="font-bold text-sm">{t[`country${c.code}` as keyof typeof t] as string || c.name.en}</span>
+                          <span className="font-bold text-sm">{t[`country${c.countryCode}` as keyof typeof t] as string || c.name.en}</span>
                           <span className="text-[8px] font-black opacity-50 uppercase tracking-tighter">{c.legalStatus === 'stage1' ? 'Full Support' : 'Advisory'}</span>
                         </div>
-                        {country === c.code && (
+                        {country === c.countryCode && (
                           <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
                             <div className="w-2.5 h-2.5 bg-white rounded-full" />
                           </div>
@@ -1376,7 +1363,7 @@ export default function App() {
                         <div className="p-1 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
                           <Crown size={16} className="text-emerald-600" />
                         </div>
-                        {TRANSLATIONS[lang].subscriptions.title}
+                        {((TRANSLATIONS as any)[lang] || TRANSLATIONS.en).subscriptions.title}
                       </button>
                     </div>
 
@@ -1828,15 +1815,20 @@ export default function App() {
                     className="mb-6 overflow-hidden"
                   >
                     <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl flex flex-col sm:flex-row items-center gap-4 justify-between">
-                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-200 px-2 leading-relaxed">
-                        {t.recalculatePrompt(getCountryConfig(country).name[lang], madhhab)}
+                      <p className="text-xs font-bold text-emerald-800 dark:text-emerald-200 px-2 leading-relaxed whitespace-pre-line">
+                        {t.recalculatePrompt(
+                          getCountryConfig(country).name[lang] || getCountryConfig(country).name.en, 
+                          madhhab,
+                          lang === 'ar' ? 'العربية' : (lang === 'bn' ? 'বাংলা' : 'English'),
+                          getCountryConfig(country).currency.code
+                        )}
                       </p>
                       <div className="flex gap-2 shrink-0">
                          <button 
                            onClick={() => setShowRecalculatePrompt(false)}
                            className="px-4 py-2 text-[10px] font-black text-slate-500 hover:text-slate-700 uppercase tracking-widest"
                          >
-                           {lang === 'bn' ? 'না' : 'Dismiss'}
+                           {t.dismiss}
                          </button>
                          <button 
                            onClick={() => {
@@ -1845,7 +1837,7 @@ export default function App() {
                            }}
                            className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 transition-all"
                          >
-                           {lang === 'bn' ? 'হ্যাঁ, পুনরায় হিসাব করুন' : 'Recalculate Now'}
+                           {t.recalculateNow}
                          </button>
                       </div>
                     </div>
@@ -1862,7 +1854,7 @@ export default function App() {
                     <button 
                       onClick={() => {
                         if (result) {
-                          setEditableSummary(generateLegalSummary(result, assets, lang, deceasedName));
+                          setEditableSummary(generateLegalSummary(result, assets, lang, deceasedName, country));
                           setIsSummaryManuallyEdited(false);
                         }
                       }}
@@ -2140,12 +2132,54 @@ export default function App() {
                         </h3>
                       </div>
                     </div>
-                    <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
-                      {getCountryConfig(country).legalFramework?.[lang] || getCountryConfig(country).legalFramework?.en}
-                    </p>
+                    <div className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
+                        {getCountryConfig(country).legalFramework && (
+                          <div className="space-y-6">
+                            <div className="flex flex-col gap-2">
+                              <h3 className="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                                {getCountryConfig(country).legalFramework.title}
+                              </h3>
+                              <div className="inline-flex items-center px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold w-fit">
+                                <Scale size={12} className="mr-2" />
+                                {getCountryConfig(country).legalFramework.statutorySource}
+                              </div>
+                            </div>
+                            
+                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700">
+                              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                {getCountryConfig(country).legalFramework.description}
+                              </p>
+                            </div>
+
+                            <div className="space-y-4">
+                              <h4 className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1">Key Legal Points</h4>
+                              <div className="grid gap-3">
+                                {getCountryConfig(country).legalFramework.keyPoints.map((point, i) => (
+                                  <div key={i} className="flex gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
+                                    <div className="shrink-0 w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px] font-black">
+                                      {i + 1}
+                                    </div>
+                                    <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{point}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-3xl border border-amber-100 dark:border-amber-800/40">
+                              <div className="flex items-center gap-3 mb-4">
+                                <AlertCircle size={20} className="text-amber-600 dark:text-amber-400" />
+                                <h4 className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-widest">Specific Rules & Exceptions</h4>
+                              </div>
+                              <p className="text-sm text-amber-900/80 dark:text-amber-200/80 leading-relaxed font-medium">
+                                {getCountryConfig(country).legalFramework.specificRules}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                    </div>
                   </div>
 
-                  {INHERITANCE_RULES[lang as keyof typeof INHERITANCE_RULES]
+                  {(INHERITANCE_RULES[lang as keyof typeof INHERITANCE_RULES] || [])
                     .filter((rule: any) => rule.countryCode === country || rule.countryCode === 'GENERAL')
                     .map((rule: any, idx: number) => (
                     <div key={idx} className="space-y-3">
@@ -2189,7 +2223,7 @@ export default function App() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {FAQ_DATA[lang].map((item, idx) => (
+                  {(FAQ_DATA[lang as keyof typeof FAQ_DATA] || []).map((item: any, idx: number) => (
                     <div key={idx} className="group p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/40 hover:border-blue-300 dark:hover:border-blue-800 hover:bg-blue-50/5 dark:hover:bg-blue-900/10 transition-all h-full flex flex-col">
                       <div className="flex gap-3 items-start mb-3">
                         <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[12px] font-black rounded-full flex items-center justify-center shadow-sm">Q</span>
@@ -2697,6 +2731,7 @@ export default function App() {
             onClose={() => setIsConverterOpen(false)}
             type={converterType}
             lang={lang}
+            country={country}
             targetUnit={
               converterTargetField === 'land' 
                 ? (country === 'SA' ? (lang === 'ar' ? 'م²' : 'm²') : (country === 'ZA' ? 'ha' : (country === 'PK' ? 'Kanal' : t.unitLand)))
